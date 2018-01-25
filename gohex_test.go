@@ -7,10 +7,13 @@ import (
 func TestConstructor(t *testing.T) {
 	m := NewMemory()
 	if m.GetStartAddress() != 0 {
-		t.Errorf("wrong initial start address")
+		t.Error("incorrect initial start address")
 	}
 	if len(m.GetDataSegments()) != 0 {
-		t.Errorf("wrong initial data segments")
+		t.Error("incorrect initial data segments")
+	}
+	if m.currentAddress != 0 {
+		t.Error("incorrect initial data segments")
 	}
 }
 
@@ -19,14 +22,14 @@ func assertParseError(t *testing.T, m *Memory, input string, et ParseErrorType, 
 		perr, ok := e.(*ParseError)
 		if ok == true {
 			if perr.ErrorType != et {
-				t.Errorf(perr.Error())
-				t.Errorf(err)
+				t.Error(perr.Error())
+				t.Error(err)
 			}
 		} else {
-			t.Errorf(err)
+			t.Error(err)
 		}
 	} else {
-		t.Errorf(err)
+		t.Error(err)
 	}
 }
 
@@ -67,3 +70,29 @@ func TestRecordsError(t *testing.T) {
 	assertParseError(t, m, ":0401000501010101F2\n", RECORD_ERROR, "no start address record error")
 	assertParseError(t, m, ":050000050101010100F2\n", RECORD_ERROR, "no start address record error")
 }
+
+func TestAddressError(t *testing.T) {
+	m := NewMemory()
+	err := m.ParseIntelHex(":020000041234B4\n:00000001FF\n")
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if m.currentAddress != 0x12340000 {
+		t.Errorf("incorrect extended address: %08X", m.currentAddress)
+	}
+	if len(m.GetDataSegments()) != 0 {
+		t.Error("incorrect data segments")
+	}
+	err = m.ParseIntelHex(":020000049ABCA4\n:00000001FF\n")
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if m.currentAddress != 0x9ABC0000 {
+		t.Errorf("incorrect extended address: %08X", m.currentAddress)
+	}
+	m.Clear()
+	if m.currentAddress != 0 {
+		t.Errorf("incorrect extended address: %08X", m.currentAddress)
+	}
+}
+
