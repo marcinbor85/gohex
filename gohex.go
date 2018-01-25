@@ -3,7 +3,6 @@ package gohex
 import (
 	"bufio"
 	"encoding/hex"
-	"fmt"
 	"strings"
 )
 
@@ -13,8 +12,9 @@ type DataSegment struct {
 }
 
 type Memory struct {
-	dataSegments []DataSegment
-	startAddress int
+	dataSegments   []DataSegment
+	startAddress   int
+	currentAddress int
 }
 
 func NewMemory() *Memory {
@@ -30,9 +30,14 @@ func (m *Memory) GetDataSegments() []DataSegment {
 	return m.dataSegments
 }
 
+func (m *Memory) Clear() {
+	m.startAddress = 0
+	m.currentAddress = 0
+	m.dataSegments = []DataSegment{}
+}
+
 func (m *Memory) ParseIntelHex(str string) error {
 	scanner := bufio.NewScanner(strings.NewReader(str))
-	currentAddress := 0
 	lineNum := 0
 	eof := false
 	start := false
@@ -66,7 +71,6 @@ func (m *Memory) ParseIntelHex(str string) error {
 		switch record_type := bytes[3]; record_type {
 		case 0:
 			//data
-			fmt.Println(currentAddress)
 			// jesli nie ma segmentu z aktualnym ciągłym adresem to:
 			// utworz segment
 			// wpisuj dane
@@ -81,7 +85,7 @@ func (m *Memory) ParseIntelHex(str string) error {
 			break
 		case 4:
 			//extended address
-			currentAddress, err = getExtendedAddress(bytes)
+			m.currentAddress, err = getExtendedAddress(bytes)
 			if err != nil {
 				return newParseError(RECORD_ERROR, err.Error(), lineNum)
 			}
