@@ -48,6 +48,13 @@ func getExtendedAddress(bytes []byte) (int, error) {
 	return adr, nil
 }
 
+func getDataLine(bytes []byte) (int, []byte) {
+	size := bytes[0]
+	adr := int(binary.BigEndian.Uint16(bytes[1:3]))
+	data := bytes[4:size + 4]
+	return adr, data 
+}
+
 func getStartAddress(bytes []byte) (int, error) {
 	if bytes[0] != 4 {
 		return 0, errors.New("incorrect data length field in start address line")
