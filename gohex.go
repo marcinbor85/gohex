@@ -19,9 +19,9 @@ type DataSegment struct {
 }
 
 type Memory struct {
-	dataSegments   []DataSegment
+	dataSegments   []*DataSegment
 	startAddress   int
-	currentAddress int
+	extendedAddress int
 	eofFlag        bool
 	startFlag      bool
 	lineNum        int
@@ -36,15 +36,15 @@ func (m *Memory) GetStartAddress() int {
 	return m.startAddress
 }
 
-func (m *Memory) GetDataSegments() []DataSegment {
+func (m *Memory) GetDataSegments() []*DataSegment {
 	return m.dataSegments
 }
 
 func (m *Memory) Clear() {
 	m.startAddress = 0
-	m.currentAddress = 0
+	m.extendedAddress = 0
 	m.lineNum = 0
-	m.dataSegments = []DataSegment{}
+	m.dataSegments = []*DataSegment{}
 	m.startFlag = false
 	m.eofFlag = false
 }
@@ -63,20 +63,33 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 	}
 	switch record_type := bytes[3]; record_type {
 	case DATA_RECORD:
-		//data
-		// jesli nie ma segmentu z aktualnym ciągłym adresem to:
-		// utworz segment
-		// wpisuj dane
-		// zwieksz aktualny adres
+		adr, data := getDataLine(bytes)
+		adr += m.extendedAddress
+		for _, s := range m.dataSegments {
+			if ((adr >= s.address) && (adr < s.address+len(s.data))) ||
+				((adr < s.address) && (adr+len(data) > s.address)) {
+				return newParseError(DATA_ERROR, "data segments overlap", m.lineNum)
+			}
+			
+			if adr == s.address+len(s.data) {
+				s.data = append(s.data, data...)
+				return nil
+			}
+			if adr+len(data) == s.address {
+				s.address = adr
+				s.data = append(data, s.data...)
+				return nil
+			}
+		}
+		m.dataSegments = append(m.dataSegments, &DataSegment{address: adr, data: data})
 	case EOF_RECORD:
 		err = checkEOF(bytes)
 		if err != nil {
 			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
 		}
 		m.eofFlag = true
-		break
 	case ADDRESS_RECORD:
-		m.currentAddress, err = getExtendedAddress(bytes)
+		m.extendedAddress, err = getExtendedAddress(bytes)
 		if err != nil {
 			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
 		}
