@@ -52,10 +52,10 @@ func TestDataError(t *testing.T) {
 
 func TestChecksumError(t *testing.T) {
 	m := NewMemory()
-	assertParseError(t, m, ":00000101FF\n", CHECKSUM_ERROR, "no checking checksum error")
-	assertParseError(t, m, ":00000001FE\n", CHECKSUM_ERROR, "no checking checksum error")
-	assertParseError(t, m, ":0000000001\n", CHECKSUM_ERROR, "no checking checksum error")
-	assertParseError(t, m, ":000000FF02\n", CHECKSUM_ERROR, "no checking checksum error")
+	assertParseError(t, m, ":00000101FF\n", CHECKSUM_ERROR, "no checksum error")
+	assertParseError(t, m, ":00000001FE\n", CHECKSUM_ERROR, "no checksum error")
+	assertParseError(t, m, ":0000000001\n", CHECKSUM_ERROR, "no checksum error")
+	assertParseError(t, m, ":000000FF02\n", CHECKSUM_ERROR, "no checksum error")
 }
 
 func TestRecordsError(t *testing.T) {
@@ -71,28 +71,70 @@ func TestRecordsError(t *testing.T) {
 	assertParseError(t, m, ":050000050101010100F2\n", RECORD_ERROR, "no start address record error")
 }
 
-func TestAddressError(t *testing.T) {
+func TestAddress(t *testing.T) {
 	m := NewMemory()
-	err := m.ParseIntelHex(":020000041234B4\n:00000001FF\n")
+	err := m.ParseIntelHex(":020000041234B4\n:0400000501020304ED\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
+	}
+	if m.lineNum != 3 {
+		t.Error("incorrect lines number")
 	}
 	if m.currentAddress != 0x12340000 {
 		t.Errorf("incorrect extended address: %08X", m.currentAddress)
 	}
+	if m.startAddress != 0x01020304 {
+		t.Errorf("incorrect start address: %08X", m.startAddress)
+	}
 	if len(m.GetDataSegments()) != 0 {
 		t.Error("incorrect data segments")
 	}
-	err = m.ParseIntelHex(":020000049ABCA4\n:00000001FF\n")
+	if m.eofFlag != true {
+		t.Error("incorrect eof flag state")
+	}
+	if m.startFlag != true {
+		t.Error("incorrect start flag state")
+	}
+	err = m.ParseIntelHex(":020000049ABCA4\n:0400000591929394AD\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
 	if m.currentAddress != 0x9ABC0000 {
 		t.Errorf("incorrect extended address: %08X", m.currentAddress)
 	}
+	if m.startAddress != 0x91929394 {
+		t.Errorf("incorrect start address: %08X", m.startAddress)
+	}
 	m.Clear()
+	if m.lineNum != 0 {
+		t.Error("incorrect lines number")
+	}
+	if len(m.GetDataSegments()) != 0 {
+		t.Error("incorrect data segments")
+	}
 	if m.currentAddress != 0 {
 		t.Errorf("incorrect extended address: %08X", m.currentAddress)
 	}
+	if m.startAddress != 0 {
+		t.Errorf("incorrect start address: %08X", m.currentAddress)
+	}
+	if m.eofFlag != false {
+		t.Error("incorrect eof flag state")
+	}
+	if m.startFlag != false {
+		t.Error("incorrect start flag state")
+	}
+	err = m.ParseIntelHex(":020000041234B4\n:02000004234592\n:00000001FF\n")
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if m.currentAddress != 0x23450000 {
+		t.Errorf("incorrect extended address: %08X", m.currentAddress)
+	}
+}
+
+func TestDataSegments(t *testing.T) {
+	//m := NewMemory()
+	//err := m.ParseIntelHex(":020000041234B4\n:00000001FF\n")
 }
 
