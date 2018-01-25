@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+const (
+	DATA_RECORD    byte = 0
+	EOF_RECORD     byte = 1
+	ADDRESS_RECORD byte = 4
+	START_RECORD   byte = 5
+)
+
 type DataSegment struct {
 	data    []byte
 	address int
@@ -15,9 +22,9 @@ type Memory struct {
 	dataSegments   []DataSegment
 	startAddress   int
 	currentAddress int
-	eofFlag		   bool
-	startFlag	   bool
-	lineNum		   int
+	eofFlag        bool
+	startFlag      bool
+	lineNum        int
 }
 
 func NewMemory() *Memory {
@@ -55,28 +62,25 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 		return newParseError(DATA_ERROR, err.Error(), m.lineNum)
 	}
 	switch record_type := bytes[3]; record_type {
-	case 0:
+	case DATA_RECORD:
 		//data
 		// jesli nie ma segmentu z aktualnym ciągłym adresem to:
 		// utworz segment
 		// wpisuj dane
 		// zwieksz aktualny adres
-	case 1:
-		//eof
+	case EOF_RECORD:
 		err = checkEOF(bytes)
 		if err != nil {
 			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
 		}
 		m.eofFlag = true
 		break
-	case 4:
-		//extended address
+	case ADDRESS_RECORD:
 		m.currentAddress, err = getExtendedAddress(bytes)
 		if err != nil {
 			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
 		}
-	case 5:
-		//run address
+	case START_RECORD:
 		if m.startFlag == true {
 			return newParseError(DATA_ERROR, "multiple start address lines", m.lineNum)
 		}
