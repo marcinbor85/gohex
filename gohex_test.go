@@ -49,11 +49,21 @@ func TestDataError(t *testing.T) {
 
 func TestChecksumError(t *testing.T) {
 	m := NewMemory()
+	assertParseError(t, m, ":00000101FF\n", CHECKSUM_ERROR, "no checking checksum error")
 	assertParseError(t, m, ":00000001FE\n", CHECKSUM_ERROR, "no checking checksum error")
 	assertParseError(t, m, ":0000000001\n", CHECKSUM_ERROR, "no checking checksum error")
 	assertParseError(t, m, ":000000FF02\n", CHECKSUM_ERROR, "no checking checksum error")
 }
 
 func TestRecordsError(t *testing.T) {
-	//assertParseError(t, m, ":0000000000\n", "no end of file")
+	m := NewMemory()
+	assertParseError(t, m, ":00000101FE\n", RECORD_ERROR, "no eof record error")
+	assertParseError(t, m, ":00010001FE\n", RECORD_ERROR, "no eof record error")
+	assertParseError(t, m, ":0100000100FE\n", RECORD_ERROR, "no eof record error")
+	assertParseError(t, m, ":020001040101F7\n", RECORD_ERROR, "no extended address record error")
+	assertParseError(t, m, ":020100040101F7\n", RECORD_ERROR, "no extended address record error")
+	assertParseError(t, m, ":03000004010100F7\n", RECORD_ERROR, "no extended address record error")
+	assertParseError(t, m, ":0400010501010101F2\n", RECORD_ERROR, "no start address record error")
+	assertParseError(t, m, ":0401000501010101F2\n", RECORD_ERROR, "no start address record error")
+	assertParseError(t, m, ":050000050101010100F2\n", RECORD_ERROR, "no start address record error")
 }
