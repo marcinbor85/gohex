@@ -246,3 +246,63 @@ func TestClear(t *testing.T) {
 		t.Error("incorrect start flag state")
 	}
 }
+
+func TestAddBinary(t *testing.T) {
+	m := NewMemory()
+	err := m.AddBinary(0x20000, []byte{1,2,3,4})
+	err = m.AddBinary(0x20004, []byte{5,6,7,8})
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if len(m.GetDataSegments()) != 1 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+	seg := m.GetDataSegments()[0]
+	p := DataSegment{address: 0x20000, data: []byte{1,2,3,4,5,6,7,8}}
+	if reflect.DeepEqual(*seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	}
+	
+	err = m.AddBinary(0x10000, []byte{1,2,3,4})
+	err = m.AddBinary(0xFFFC, []byte{5,6,7,8})
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if len(m.GetDataSegments()) != 2 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+	seg = m.GetDataSegments()[0]
+	p = DataSegment{address: 0xFFFC, data: []byte{5,6,7,8,1,2,3,4}}
+	if reflect.DeepEqual(*seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	}
+	seg = m.GetDataSegments()[1]
+	p = DataSegment{address: 0x20000, data: []byte{1,2,3,4,5,6,7,8}}
+	if reflect.DeepEqual(*seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	}
+	
+	err = m.AddBinary(0x15000, []byte{1,2,3,4})
+	err = m.AddBinary(0x14FF8, []byte{5,6,7,8,9,10,11,12})
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if len(m.GetDataSegments()) != 3 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+	seg = m.GetDataSegments()[0]
+	p = DataSegment{address: 0xFFFC, data: []byte{5,6,7,8,1,2,3,4}}
+	if reflect.DeepEqual(*seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	}
+	seg = m.GetDataSegments()[1]
+	p = DataSegment{address: 0x14FF8, data: []byte{5,6,7,8,9,10,11,12,1,2,3,4}}
+	if reflect.DeepEqual(*seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	}
+	seg = m.GetDataSegments()[2]
+	p = DataSegment{address: 0x20000, data: []byte{1,2,3,4,5,6,7,8}}
+	if reflect.DeepEqual(*seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	}
+}
