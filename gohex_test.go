@@ -296,6 +296,10 @@ func TestAddBinary(t *testing.T) {
 	if err == nil {
 		t.Error("no data segments overlaps error")
 	}
+	err = m.AddBinary(0x15003, []byte{1, 2, 3, 4})
+	if err == nil {
+		t.Error("no data segments overlaps error")
+	}
 	
 	err = m.AddBinary(0x14FF8, []byte{5, 6, 7, 8, 9, 10, 11, 12})
 	if err != nil {
