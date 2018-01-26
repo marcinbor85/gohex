@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"strings"
+	"sort"
 )
 
 const (
@@ -18,9 +19,15 @@ type DataSegment struct {
 	address int
 }
 
+type sortByAddress []*DataSegment
+
+func (segs sortByAddress) Len() int           { return len(segs) }
+func (segs sortByAddress) Swap(i, j int)      { segs[i], segs[j] = segs[j], segs[i] }
+func (segs sortByAddress) Less(i, j int) bool { return segs[i].address < segs[j].address }
+
 type Memory struct {
 	dataSegments   []*DataSegment
-	startAddress   int
+	startAddress   *int
 	extendedAddress int
 	eofFlag        bool
 	startFlag      bool
@@ -29,19 +36,25 @@ type Memory struct {
 
 func NewMemory() *Memory {
 	m := new(Memory)
+	m.Clear()
 	return m
 }
 
-func (m *Memory) GetStartAddress() int {
-	return m.startAddress
+func (m *Memory) GetStartAddress() (int, bool) {
+	if m.startAddress != nil {
+		return *m.startAddress, true
+	}
+	return 0, false
 }
 
 func (m *Memory) GetDataSegments() []*DataSegment {
-	return m.dataSegments
+	segs := m.dataSegments
+	sort.Sort(sortByAddress(segs))
+	return segs
 }
 
 func (m *Memory) Clear() {
-	m.startAddress = 0
+	m.startAddress = nil
 	m.extendedAddress = 0
 	m.lineNum = 0
 	m.dataSegments = []*DataSegment{}
@@ -105,7 +118,8 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 		if m.startFlag == true {
 			return newParseError(DATA_ERROR, "multiple start address lines", m.lineNum)
 		}
-		m.startAddress, err = getStartAddress(bytes)
+		a, err := getStartAddress(bytes)
+		m.startAddress = &a
 		if err != nil {
 			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
 		}
