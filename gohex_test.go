@@ -7,7 +7,7 @@ import (
 
 func TestConstructor(t *testing.T) {
 	m := NewMemory()
-	if m.GetStartAddress() != 0 {
+	if a, ok := m.GetStartAddress(); ok != false || a != 0 {
 		t.Error("incorrect initial start address")
 	}
 	if len(m.GetDataSegments()) != 0 {
@@ -86,7 +86,7 @@ func TestAddress(t *testing.T) {
 	if m.extendedAddress != 0x12340000 {
 		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
 	}
-	if m.startAddress != 0x01020304 {
+	if a, ok := m.GetStartAddress(); a != 0x01020304 && ok == true {
 		t.Errorf("incorrect start address: %08X", m.startAddress)
 	}
 	if len(m.GetDataSegments()) != 0 {
@@ -105,28 +105,10 @@ func TestAddress(t *testing.T) {
 	if m.extendedAddress != 0x9ABC0000 {
 		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
 	}
-	if m.startAddress != 0x91929394 {
+	if a, ok := m.GetStartAddress(); a != 0x91929394 && ok == true {
 		t.Errorf("incorrect start address: %08X", m.startAddress)
 	}
-	m.Clear()
-	if m.lineNum != 0 {
-		t.Error("incorrect lines number")
-	}
-	if len(m.GetDataSegments()) != 0 {
-		t.Error("incorrect data segments")
-	}
-	if m.extendedAddress != 0 {
-		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
-	}
-	if m.startAddress != 0 {
-		t.Errorf("incorrect start address: %08X", m.extendedAddress)
-	}
-	if m.eofFlag != false {
-		t.Error("incorrect eof flag state")
-	}
-	if m.startFlag != false {
-		t.Error("incorrect start flag state")
-	}
+	
 	err = m.ParseIntelHex(":020000041234B4\n:02000004234592\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
@@ -190,12 +172,12 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0x8008, data: []byte{5,6,7,8}}
+	p = DataSegment{address: 0x8000, data: []byte{1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[1]
-	p = DataSegment{address: 0x8000, data: []byte{1,2,3,4}}
+	p = DataSegment{address: 0x8008, data: []byte{5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -218,7 +200,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	
-	err = m.ParseIntelHex(":020000041000EA\n:048000000102030472\n:020000042000DA\n:048000000506070862\n:00000001FF\n")
+	err = m.ParseIntelHex(":020000042000DA\n:048000000506070862\n:020000041000EA\n:048000000102030472\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -238,3 +220,29 @@ func TestDataSegments(t *testing.T) {
 
 }
 
+func TestClear(t *testing.T) {
+	m := NewMemory()
+	err := m.ParseIntelHex(":020000049ABCA4\n:0400000591929394AD\n:048000000102030472\n:00000001FF\n")
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	m.Clear()
+	if m.lineNum != 0 {
+		t.Error("incorrect lines number")
+	}
+	if len(m.GetDataSegments()) != 0 {
+		t.Error("incorrect data segments")
+	}
+	if m.extendedAddress != 0 {
+		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
+	}
+	if a, _ := m.GetStartAddress(); a != 0 {
+		t.Errorf("incorrect start address: %08X", m.extendedAddress)
+	}
+	if m.eofFlag != false {
+		t.Error("incorrect eof flag state")
+	}
+	if m.startFlag != false {
+		t.Error("incorrect start flag state")
+	}
+}
