@@ -8,7 +8,7 @@ import (
 func TestConstructor(t *testing.T) {
 	m := NewMemory()
 	if a, ok := m.GetStartAddress(); ok != false || a != 0 {
-		t.Error("incorrect initial start address")
+		t.Error("incorrect initial start Address")
 	}
 	if len(m.GetDataSegments()) != 0 {
 		t.Error("incorrect initial data segments")
@@ -48,7 +48,7 @@ func TestDataError(t *testing.T) {
 	assertParseError(t, m, "\n", DATA_ERROR, "no end of file line error")
 	assertParseError(t, m, ":000000FF01\n", DATA_ERROR, "no end of file line error")
 	assertParseError(t, m, ":0400000501000000F6\n", DATA_ERROR, "no end of file line error")
-	assertParseError(t, m, ":0400000501000000F6\n:0400000502000000F5\n:00000001FF\n", DATA_ERROR, "no multiple start address lines error")
+	assertParseError(t, m, ":0400000501000000F6\n:0400000502000000F5\n:00000001FF\n", DATA_ERROR, "no multiple start Address lines error")
 	assertParseError(t, m, ":048000000102030472\n:04800300050607085F\n:00000001FF\n", DATA_ERROR, "no segments overlap error")
 	assertParseError(t, m, ":048000000102030472\n:047FFD000506070866\n:00000001FF\n", DATA_ERROR, "no segments overlap error")
 }
@@ -66,12 +66,12 @@ func TestRecordsError(t *testing.T) {
 	assertParseError(t, m, ":00000101FE\n", RECORD_ERROR, "no eof record error")
 	assertParseError(t, m, ":00010001FE\n", RECORD_ERROR, "no eof record error")
 	assertParseError(t, m, ":0100000100FE\n", RECORD_ERROR, "no eof record error")
-	assertParseError(t, m, ":020001040101F7\n", RECORD_ERROR, "no extended address record error")
-	assertParseError(t, m, ":020100040101F7\n", RECORD_ERROR, "no extended address record error")
-	assertParseError(t, m, ":03000004010100F7\n", RECORD_ERROR, "no extended address record error")
-	assertParseError(t, m, ":0400010501010101F2\n", RECORD_ERROR, "no start address record error")
-	assertParseError(t, m, ":0401000501010101F2\n", RECORD_ERROR, "no start address record error")
-	assertParseError(t, m, ":050000050101010100F2\n", RECORD_ERROR, "no start address record error")
+	assertParseError(t, m, ":020001040101F7\n", RECORD_ERROR, "no extended Address record error")
+	assertParseError(t, m, ":020100040101F7\n", RECORD_ERROR, "no extended Address record error")
+	assertParseError(t, m, ":03000004010100F7\n", RECORD_ERROR, "no extended Address record error")
+	assertParseError(t, m, ":0400010501010101F2\n", RECORD_ERROR, "no start Address record error")
+	assertParseError(t, m, ":0401000501010101F2\n", RECORD_ERROR, "no start Address record error")
+	assertParseError(t, m, ":050000050101010100F2\n", RECORD_ERROR, "no start Address record error")
 }
 
 func TestAddress(t *testing.T) {
@@ -84,10 +84,10 @@ func TestAddress(t *testing.T) {
 		t.Error("incorrect lines number")
 	}
 	if m.extendedAddress != 0x12340000 {
-		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
+		t.Errorf("incorrect extended Address: %08X", m.extendedAddress)
 	}
 	if a, ok := m.GetStartAddress(); a != 0x01020304 && ok == true {
-		t.Errorf("incorrect start address: %08X", m.startAddress)
+		t.Errorf("incorrect start Address: %08X", m.startAddress)
 	}
 	if len(m.GetDataSegments()) != 0 {
 		t.Error("incorrect data segments")
@@ -103,10 +103,10 @@ func TestAddress(t *testing.T) {
 		t.Error("unexpected error: ", err.Error())
 	}
 	if m.extendedAddress != 0x9ABC0000 {
-		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
+		t.Errorf("incorrect extended Address: %08X", m.extendedAddress)
 	}
 	if a, ok := m.GetStartAddress(); a != 0x91929394 && ok == true {
-		t.Errorf("incorrect start address: %08X", m.startAddress)
+		t.Errorf("incorrect start Address: %08X", m.startAddress)
 	}
 	
 	err = m.ParseIntelHex(":020000041234B4\n:02000004234592\n:00000001FF\n")
@@ -114,7 +114,7 @@ func TestAddress(t *testing.T) {
 		t.Error("unexpected error: ", err.Error())
 	}
 	if m.extendedAddress != 0x23450000 {
-		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
+		t.Errorf("incorrect extended Address: %08X", m.extendedAddress)
 	}
 }
 
@@ -128,7 +128,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg := m.GetDataSegments()[0]
-	p := DataSegment{address: 0x8000, data: []byte{1,2,3,4,5,6,7,8}}
+	p := DataSegment{Address: 0x8000, Data: []byte{1,2,3,4,5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -141,7 +141,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0x7FFC, data: []byte{5,6,7,8,1,2,3,4}}
+	p = DataSegment{Address: 0x7FFC, Data: []byte{5,6,7,8,1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -154,12 +154,12 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0x8000, data: []byte{1,2,3,4}}
+	p = DataSegment{Address: 0x8000, Data: []byte{1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[1]
-	p = DataSegment{address: 0x8008, data: []byte{5,6,7,8}}
+	p = DataSegment{Address: 0x8008, Data: []byte{5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -172,12 +172,12 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0x8000, data: []byte{1,2,3,4}}
+	p = DataSegment{Address: 0x8000, Data: []byte{1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[1]
-	p = DataSegment{address: 0x8008, data: []byte{5,6,7,8}}
+	p = DataSegment{Address: 0x8008, Data: []byte{5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -190,12 +190,12 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0x10008000, data: []byte{1,2,3,4}}
+	p = DataSegment{Address: 0x10008000, Data: []byte{1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[1]
-	p = DataSegment{address: 0x10008008, data: []byte{5,6,7,8}}
+	p = DataSegment{Address: 0x10008008, Data: []byte{5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -208,12 +208,12 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0x10008000, data: []byte{1,2,3,4}}
+	p = DataSegment{Address: 0x10008000, Data: []byte{1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[1]
-	p = DataSegment{address: 0x20008000, data: []byte{5,6,7,8}}
+	p = DataSegment{Address: 0x20008000, Data: []byte{5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -234,10 +234,10 @@ func TestClear(t *testing.T) {
 		t.Error("incorrect data segments")
 	}
 	if m.extendedAddress != 0 {
-		t.Errorf("incorrect extended address: %08X", m.extendedAddress)
+		t.Errorf("incorrect extended Address: %08X", m.extendedAddress)
 	}
 	if a, _ := m.GetStartAddress(); a != 0 {
-		t.Errorf("incorrect start address: %08X", m.extendedAddress)
+		t.Errorf("incorrect start Address: %08X", m.extendedAddress)
 	}
 	if m.eofFlag != false {
 		t.Error("incorrect eof flag state")
@@ -258,7 +258,7 @@ func TestAddBinary(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg := m.GetDataSegments()[0]
-	p := DataSegment{address: 0x20000, data: []byte{1,2,3,4,5,6,7,8}}
+	p := DataSegment{Address: 0x20000, Data: []byte{1,2,3,4,5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -272,12 +272,12 @@ func TestAddBinary(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0xFFFC, data: []byte{5,6,7,8,1,2,3,4}}
+	p = DataSegment{Address: 0xFFFC, Data: []byte{5,6,7,8,1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[1]
-	p = DataSegment{address: 0x20000, data: []byte{1,2,3,4,5,6,7,8}}
+	p = DataSegment{Address: 0x20000, Data: []byte{1,2,3,4,5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
@@ -291,17 +291,17 @@ func TestAddBinary(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 	seg = m.GetDataSegments()[0]
-	p = DataSegment{address: 0xFFFC, data: []byte{5,6,7,8,1,2,3,4}}
+	p = DataSegment{Address: 0xFFFC, Data: []byte{5,6,7,8,1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[1]
-	p = DataSegment{address: 0x14FF8, data: []byte{5,6,7,8,9,10,11,12,1,2,3,4}}
+	p = DataSegment{Address: 0x14FF8, Data: []byte{5,6,7,8,9,10,11,12,1,2,3,4}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 	seg = m.GetDataSegments()[2]
-	p = DataSegment{address: 0x20000, data: []byte{1,2,3,4,5,6,7,8}}
+	p = DataSegment{Address: 0x20000, Data: []byte{1,2,3,4,5,6,7,8}}
 	if reflect.DeepEqual(*seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}

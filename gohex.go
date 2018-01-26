@@ -7,6 +7,7 @@ import (
 	"sort"
 )
 
+// Constants definitions of IntelHex record types
 const (
 	DATA_RECORD    byte = 0
 	EOF_RECORD     byte = 1
@@ -14,16 +15,18 @@ const (
 	START_RECORD   byte = 5
 )
 
+// Structure with binary data segment fields
 type DataSegment struct {
-	data    []byte
-	address int
+	Data    []byte
+	Address int
 }
 
+// Helper type for data segments sorting operations
 type sortByAddress []*DataSegment
 
 func (segs sortByAddress) Len() int           { return len(segs) }
 func (segs sortByAddress) Swap(i, j int)      { segs[i], segs[j] = segs[j], segs[i] }
-func (segs sortByAddress) Less(i, j int) bool { return segs[i].address < segs[j].address }
+func (segs sortByAddress) Less(i, j int) bool { return segs[i].Address < segs[j].Address }
 
 type Memory struct {
 	dataSegments   []*DataSegment
@@ -40,6 +43,7 @@ func NewMemory() *Memory {
 	return m
 }
 
+// Method to retrieve start address from IntelHex data
 func (m *Memory) GetStartAddress() (int, bool) {
 	if m.startFlag {
 		return m.startAddress, true
@@ -47,6 +51,7 @@ func (m *Memory) GetStartAddress() (int, bool) {
 	return 0, false
 }
 
+// Method to retrieve data segments address from IntelHex data
 func (m *Memory) GetDataSegments() []*DataSegment {
 	segs := m.dataSegments
 	sort.Sort(sortByAddress(segs))
@@ -64,22 +69,22 @@ func (m *Memory) Clear() {
 
 func (m *Memory) AddBinary(adr int, bytes []byte) error {
 	for _, s := range m.dataSegments {
-		if ((adr >= s.address) && (adr < s.address+len(s.data))) ||
-			((adr < s.address) && (adr+len(bytes) > s.address)) {
+		if ((adr >= s.Address) && (adr < s.Address+len(s.Data))) ||
+			((adr < s.Address) && (adr+len(bytes) > s.Address)) {
 			return newParseError(DATA_ERROR, "data segments overlap", m.lineNum)
 		}
 		
-		if adr == s.address+len(s.data) {
-			s.data = append(s.data, bytes...)
+		if adr == s.Address+len(s.Data) {
+			s.Data = append(s.Data, bytes...)
 			return nil
 		}
-		if adr+len(bytes) == s.address {
-			s.address = adr
-			s.data = append(bytes, s.data...)
+		if adr+len(bytes) == s.Address {
+			s.Address = adr
+			s.Data = append(bytes, s.Data...)
 			return nil
 		}
 	}
-	m.dataSegments = append(m.dataSegments, &DataSegment{address: adr, data: bytes})
+	m.dataSegments = append(m.dataSegments, &DataSegment{Address: adr, Data: bytes})
 	return nil
 }
 
