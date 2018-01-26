@@ -325,3 +325,27 @@ func TestAddBinary(t *testing.T) {
 	}
 	err = m.AddBinary(0x15000, []byte{1, 2, 3, 4})
 }
+
+func TestSetStartMemory(t *testing.T) {
+	m := NewMemory()
+	m.SetStartAddress(0x12345678)
+	
+	if a, ok := m.GetStartAddress(); a != 0x12345678 || ok != true {
+		t.Errorf("wrong start address: ", a)
+	}
+	
+	err := parseIntelHex(m, ":020000049ABCA4\n:0400000591929394AD\n:048000000102030472\n:00000001FF\n")
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	
+	if a, ok := m.GetStartAddress(); a != 0x91929394 || ok != true {
+		t.Errorf("wrong start address: ", a)
+	}
+	
+	m.SetStartAddress(0x23456789)
+	
+	if a, ok := m.GetStartAddress(); a != 0x23456789 || ok != true {
+		t.Errorf("wrong start address: ", a)
+	}
+}

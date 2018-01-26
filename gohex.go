@@ -28,22 +28,24 @@ func (segs sortByAddress) Len() int           { return len(segs) }
 func (segs sortByAddress) Swap(i, j int)      { segs[i], segs[j] = segs[j], segs[i] }
 func (segs sortByAddress) Less(i, j int) bool { return segs[i].Address < segs[j].Address }
 
+// Main structure with private fields of IntelHex parser
 type Memory struct {
-	dataSegments    []*DataSegment
-	startAddress    int
-	extendedAddress int
-	eofFlag         bool
-	startFlag       bool
-	lineNum         int
+	dataSegments    []*DataSegment // Slice with pointers to DataSegments
+	startAddress    int            // Start linear address
+	extendedAddress int            // Extended linear address
+	eofFlag         bool           // End of file record exist flag
+	startFlag       bool           // Start address record exist flag
+	lineNum         int            // Parser input line number
 }
 
+// Constructor of Memory structure
 func NewMemory() *Memory {
 	m := new(Memory)
 	m.Clear()
 	return m
 }
 
-// Method to retrieve start address from IntelHex data
+// Method to getting start address from IntelHex data
 func (m *Memory) GetStartAddress() (adr int, ok bool) {
 	if m.startFlag {
 		return m.startAddress, true
@@ -51,7 +53,13 @@ func (m *Memory) GetStartAddress() (adr int, ok bool) {
 	return 0, false
 }
 
-// Method to retrieve data segments address from IntelHex data
+// Method to setting start address to IntelHex data
+func (m *Memory) SetStartAddress(adr int) {
+	m.startAddress = adr
+	m.startFlag = true
+}
+
+// Method to getting data segments address from IntelHex data
 func (m *Memory) GetDataSegments() []DataSegment {
 	segs := []DataSegment{}
 	for _, s := range m.dataSegments {
@@ -170,6 +178,6 @@ func (m *Memory) ParseIntelHex(reader io.Reader) error {
 	return nil
 }
 
-func (m *Memory) DumpIntelHex() error {
+func (m *Memory) DumpIntelHex(writer io.Writer) error {
 	return nil
 }
