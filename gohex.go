@@ -3,8 +3,8 @@ package gohex
 import (
 	"bufio"
 	"encoding/hex"
+	"io"
 	"sort"
-	"strings"
 )
 
 // Constants definitions of IntelHex record types
@@ -17,7 +17,7 @@ const (
 
 // Structure with binary data segment fields
 type DataSegment struct {
-	Address int // Starting address of data segment
+	Address int    // Starting address of data segment
 	Data    []byte // Data segment bytes
 }
 
@@ -146,8 +146,8 @@ func (m *Memory) parseIntelHexLine(line string) error {
 	return m.parseIntelHexRecord(bytes)
 }
 
-func (m *Memory) ParseIntelHex(str string) error {
-	scanner := bufio.NewScanner(strings.NewReader(str))
+func (m *Memory) ParseIntelHex(reader io.Reader) error {
+	scanner := bufio.NewScanner(reader)
 	m.Clear()
 	for scanner.Scan() {
 		m.lineNum++

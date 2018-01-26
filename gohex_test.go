@@ -2,6 +2,7 @@ package gohex
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -18,8 +19,12 @@ func TestConstructor(t *testing.T) {
 	}
 }
 
+func parseIntelHex(m *Memory, str string) error {
+	return m.ParseIntelHex(strings.NewReader(str))
+}
+
 func assertParseError(t *testing.T, m *Memory, input string, et ParseErrorType, err string) {
-	if e := m.ParseIntelHex(input); e != nil {
+	if e := parseIntelHex(m, input); e != nil {
 		perr, ok := e.(*ParseError)
 		if ok == true {
 			if perr.ErrorType != et {
@@ -76,7 +81,7 @@ func TestRecordsError(t *testing.T) {
 
 func TestAddress(t *testing.T) {
 	m := NewMemory()
-	err := m.ParseIntelHex(":020000041234B4\n:0400000501020304ED\n:00000001FF\n")
+	err := parseIntelHex(m, ":020000041234B4\n:0400000501020304ED\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -98,7 +103,7 @@ func TestAddress(t *testing.T) {
 	if m.startFlag != true {
 		t.Error("incorrect start flag state")
 	}
-	err = m.ParseIntelHex(":020000049ABCA4\n:0400000591929394AD\n:00000001FF\n")
+	err = parseIntelHex(m, ":020000049ABCA4\n:0400000591929394AD\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -109,7 +114,7 @@ func TestAddress(t *testing.T) {
 		t.Errorf("incorrect start Address: %08X", m.startAddress)
 	}
 
-	err = m.ParseIntelHex(":020000041234B4\n:02000004234592\n:00000001FF\n")
+	err = parseIntelHex(m, ":020000041234B4\n:02000004234592\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -120,7 +125,7 @@ func TestAddress(t *testing.T) {
 
 func TestDataSegments(t *testing.T) {
 	m := NewMemory()
-	err := m.ParseIntelHex(":048000000102030472\n:04800400050607085E\n:00000001FF\n")
+	err := parseIntelHex(m, ":048000000102030472\n:04800400050607085E\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -133,7 +138,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 
-	err = m.ParseIntelHex(":048000000102030472\n:047FFC000506070867\n:00000001FF\n")
+	err = parseIntelHex(m, ":048000000102030472\n:047FFC000506070867\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -146,7 +151,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 
-	err = m.ParseIntelHex(":048000000102030472\n:04800800050607085A\n:00000001FF\n")
+	err = parseIntelHex(m, ":048000000102030472\n:04800800050607085A\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -164,7 +169,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 
-	err = m.ParseIntelHex(":04800800050607085A\n:048000000102030472\n\n:00000001FF\n")
+	err = parseIntelHex(m, ":04800800050607085A\n:048000000102030472\n\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -182,7 +187,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 
-	err = m.ParseIntelHex(":020000041000EA\n:048000000102030472\n:04800800050607085A\n:00000001FF\n")
+	err = parseIntelHex(m, ":020000041000EA\n:048000000102030472\n:04800800050607085A\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -200,7 +205,7 @@ func TestDataSegments(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", *seg, p)
 	}
 
-	err = m.ParseIntelHex(":020000042000DA\n:048000000506070862\n:020000041000EA\n:048000000102030472\n:00000001FF\n")
+	err = parseIntelHex(m, ":020000042000DA\n:048000000506070862\n:020000041000EA\n:048000000102030472\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
@@ -222,7 +227,7 @@ func TestDataSegments(t *testing.T) {
 
 func TestClear(t *testing.T) {
 	m := NewMemory()
-	err := m.ParseIntelHex(":020000049ABCA4\n:0400000591929394AD\n:048000000102030472\n:00000001FF\n")
+	err := parseIntelHex(m, ":020000049ABCA4\n:0400000591929394AD\n:048000000102030472\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
