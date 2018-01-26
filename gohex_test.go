@@ -23,11 +23,11 @@ func parseIntelHex(m *Memory, str string) error {
 	return m.ParseIntelHex(strings.NewReader(str))
 }
 
-func assertParseError(t *testing.T, m *Memory, input string, et ParseErrorType, err string) {
+func assertParseError(t *testing.T, m *Memory, input string, et parseErrorType, err string) {
 	if e := parseIntelHex(m, input); e != nil {
-		perr, ok := e.(*ParseError)
+		perr, ok := e.(*parseError)
 		if ok == true {
-			if perr.ErrorType != et {
+			if perr.errorType != et {
 				t.Error(perr.Error())
 				t.Error(err)
 			}

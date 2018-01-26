@@ -4,24 +4,24 @@ import (
 	"fmt"
 )
 
-type ParseErrorType int
+type parseErrorType int
 
 const (
-	SYNTAX_ERROR   ParseErrorType = 1
-	RECORD_ERROR   ParseErrorType = 2
-	DATA_ERROR     ParseErrorType = 3
-	CHECKSUM_ERROR ParseErrorType = 4
+	SYNTAX_ERROR   parseErrorType = 1
+	RECORD_ERROR   parseErrorType = 2
+	DATA_ERROR     parseErrorType = 3
+	CHECKSUM_ERROR parseErrorType = 4
 )
 
-type ParseError struct {
-	ErrorType ParseErrorType
-	Message   string
-	LineNum   int
+type parseError struct {
+	errorType parseErrorType
+	message   string
+	lineNum   int
 }
 
-func (e *ParseError) Error() string {
+func (e *parseError) Error() string {
 	var str string = "error"
-	switch e.ErrorType {
+	switch e.errorType {
 	case SYNTAX_ERROR:
 		str = "syntax error"
 	case RECORD_ERROR:
@@ -31,9 +31,9 @@ func (e *ParseError) Error() string {
 	case CHECKSUM_ERROR:
 		str = "checksum error"
 	}
-	return fmt.Sprintf("%s: %s at line %d", str, e.Message, e.LineNum)
+	return fmt.Sprintf("%s: %s at line %d", str, e.message, e.lineNum)
 }
 
-func newParseError(et ParseErrorType, msg string, line int) error {
-	return &ParseError{ErrorType: et, Message: msg, LineNum: line}
+func newParseError(et parseErrorType, msg string, line int) error {
+	return &parseError{errorType: et, message: msg, lineNum: line}
 }
