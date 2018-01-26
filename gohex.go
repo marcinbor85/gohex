@@ -22,7 +22,7 @@ type DataSegment struct {
 }
 
 // Helper type for data segments sorting operations
-type sortByAddress []*DataSegment
+type sortByAddress []DataSegment
 
 func (segs sortByAddress) Len() int           { return len(segs) }
 func (segs sortByAddress) Swap(i, j int)      { segs[i], segs[j] = segs[j], segs[i] }
@@ -52,8 +52,11 @@ func (m *Memory) GetStartAddress() (adr int, ok bool) {
 }
 
 // Method to retrieve data segments address from IntelHex data
-func (m *Memory) GetDataSegments() []*DataSegment {
-	segs := m.dataSegments
+func (m *Memory) GetDataSegments() []DataSegment {
+	segs := []DataSegment{}
+	for _, s := range m.dataSegments {
+		segs = append(segs, *s)
+	}
 	sort.Sort(sortByAddress(segs))
 	return segs
 }

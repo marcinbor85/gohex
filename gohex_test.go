@@ -134,8 +134,8 @@ func TestDataSegments(t *testing.T) {
 	}
 	seg := m.GetDataSegments()[0]
 	p := DataSegment{Address: 0x8000, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 	err = parseIntelHex(m, ":048000000102030472\n:047FFC000506070867\n:00000001FF\n")
@@ -147,8 +147,8 @@ func TestDataSegments(t *testing.T) {
 	}
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0x7FFC, Data: []byte{5, 6, 7, 8, 1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 	err = parseIntelHex(m, ":048000000102030472\n:04800800050607085A\n:00000001FF\n")
@@ -160,13 +160,13 @@ func TestDataSegments(t *testing.T) {
 	}
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0x8000, Data: []byte{1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	seg = m.GetDataSegments()[1]
 	p = DataSegment{Address: 0x8008, Data: []byte{5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 	err = parseIntelHex(m, ":04800800050607085A\n:048000000102030472\n\n:00000001FF\n")
@@ -178,13 +178,13 @@ func TestDataSegments(t *testing.T) {
 	}
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0x8000, Data: []byte{1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	seg = m.GetDataSegments()[1]
 	p = DataSegment{Address: 0x8008, Data: []byte{5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 	err = parseIntelHex(m, ":020000041000EA\n:048000000102030472\n:04800800050607085A\n:00000001FF\n")
@@ -196,13 +196,13 @@ func TestDataSegments(t *testing.T) {
 	}
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0x10008000, Data: []byte{1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	seg = m.GetDataSegments()[1]
 	p = DataSegment{Address: 0x10008008, Data: []byte{5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 	err = parseIntelHex(m, ":020000042000DA\n:048000000506070862\n:020000041000EA\n:048000000102030472\n:00000001FF\n")
@@ -214,13 +214,13 @@ func TestDataSegments(t *testing.T) {
 	}
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0x10008000, Data: []byte{1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	seg = m.GetDataSegments()[1]
 	p = DataSegment{Address: 0x20008000, Data: []byte{5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 }
@@ -264,8 +264,8 @@ func TestAddBinary(t *testing.T) {
 	}
 	seg := m.GetDataSegments()[0]
 	p := DataSegment{Address: 0x20000, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 	err = m.AddBinary(0x10000, []byte{1, 2, 3, 4})
@@ -278,13 +278,13 @@ func TestAddBinary(t *testing.T) {
 	}
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0xFFFC, Data: []byte{5, 6, 7, 8, 1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	seg = m.GetDataSegments()[1]
 	p = DataSegment{Address: 0x20000, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 
 	err = m.AddBinary(0x15000, []byte{1, 2, 3, 4})
@@ -297,17 +297,17 @@ func TestAddBinary(t *testing.T) {
 	}
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0xFFFC, Data: []byte{5, 6, 7, 8, 1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	seg = m.GetDataSegments()[1]
 	p = DataSegment{Address: 0x14FF8, Data: []byte{5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	seg = m.GetDataSegments()[2]
 	p = DataSegment{Address: 0x20000, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8}}
-	if reflect.DeepEqual(*seg, p) == false {
-		t.Errorf("incorrect segment: %v != %v", *seg, p)
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 }
