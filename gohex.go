@@ -9,10 +9,10 @@ import (
 
 // Constants definitions of IntelHex record types
 const (
-	DATA_RECORD    byte = 0 // Record with data bytes
-	EOF_RECORD     byte = 1 // Record with end of file indicator
-	ADDRESS_RECORD byte = 4 // Record with extended linear address
-	START_RECORD   byte = 5 // Record with start linear address
+	_DATA_RECORD    byte = 0 // Record with data bytes
+	_EOF_RECORD     byte = 1 // Record with end of file indicator
+	_ADDRESS_RECORD byte = 4 // Record with extended linear address
+	_START_RECORD   byte = 5 // Record with start linear address
 )
 
 // Structure with binary data segment fields
@@ -74,7 +74,7 @@ func (m *Memory) AddBinary(adr int, bytes []byte) error {
 	for _, s := range m.dataSegments {
 		if ((adr >= s.Address) && (adr < s.Address+len(s.Data))) ||
 			((adr < s.Address) && (adr+len(bytes) > s.Address)) {
-			return newParseError(DATA_ERROR, "data segments overlap", m.lineNum)
+			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
 
 		if adr == s.Address+len(s.Data) {
@@ -93,42 +93,42 @@ func (m *Memory) AddBinary(adr int, bytes []byte) error {
 
 func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 	if len(bytes) < 5 {
-		return newParseError(DATA_ERROR, "not enought data bytes", m.lineNum)
+		return newParseError(_DATA_ERROR, "not enought data bytes", m.lineNum)
 	}
 	err := checkSum(bytes)
 	if err != nil {
-		return newParseError(CHECKSUM_ERROR, err.Error(), m.lineNum)
+		return newParseError(_CHECKSUM_ERROR, err.Error(), m.lineNum)
 	}
 	err = checkRecordSize(bytes)
 	if err != nil {
-		return newParseError(DATA_ERROR, err.Error(), m.lineNum)
+		return newParseError(_DATA_ERROR, err.Error(), m.lineNum)
 	}
 	switch record_type := bytes[3]; record_type {
-	case DATA_RECORD:
+	case _DATA_RECORD:
 		adr, data := getDataLine(bytes)
 		adr += m.extendedAddress
 		err = m.AddBinary(adr, data)
 		if err != nil {
 			return err
 		}
-	case EOF_RECORD:
+	case _EOF_RECORD:
 		err = checkEOF(bytes)
 		if err != nil {
-			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
+			return newParseError(_RECORD_ERROR, err.Error(), m.lineNum)
 		}
 		m.eofFlag = true
-	case ADDRESS_RECORD:
+	case _ADDRESS_RECORD:
 		m.extendedAddress, err = getExtendedAddress(bytes)
 		if err != nil {
-			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
+			return newParseError(_RECORD_ERROR, err.Error(), m.lineNum)
 		}
-	case START_RECORD:
+	case _START_RECORD:
 		if m.startFlag == true {
-			return newParseError(DATA_ERROR, "multiple start address lines", m.lineNum)
+			return newParseError(_DATA_ERROR, "multiple start address lines", m.lineNum)
 		}
 		m.startAddress, err = getStartAddress(bytes)
 		if err != nil {
-			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
+			return newParseError(_RECORD_ERROR, err.Error(), m.lineNum)
 		}
 		m.startFlag = true
 	}
@@ -140,11 +140,11 @@ func (m *Memory) parseIntelHexLine(line string) error {
 		return nil
 	}
 	if line[0] != ':' {
-		return newParseError(SYNTAX_ERROR, "no colon char on the first line character", m.lineNum)
+		return newParseError(_SYNTAX_ERROR, "no colon char on the first line character", m.lineNum)
 	}
 	bytes, err := hex.DecodeString(line[1:])
 	if err != nil {
-		return newParseError(SYNTAX_ERROR, err.Error(), m.lineNum)
+		return newParseError(_SYNTAX_ERROR, err.Error(), m.lineNum)
 	}
 	return m.parseIntelHexRecord(bytes)
 }
@@ -161,10 +161,10 @@ func (m *Memory) ParseIntelHex(reader io.Reader) error {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return newParseError(SYNTAX_ERROR, err.Error(), m.lineNum)
+		return newParseError(_SYNTAX_ERROR, err.Error(), m.lineNum)
 	}
 	if m.eofFlag == false {
-		return newParseError(DATA_ERROR, "no end of file line", m.lineNum)
+		return newParseError(_DATA_ERROR, "no end of file line", m.lineNum)
 	}
 
 	return nil

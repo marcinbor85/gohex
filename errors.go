@@ -7,10 +7,10 @@ import (
 type parseErrorType int
 
 const (
-	SYNTAX_ERROR   parseErrorType = 1
-	RECORD_ERROR   parseErrorType = 2
-	DATA_ERROR     parseErrorType = 3
-	CHECKSUM_ERROR parseErrorType = 4
+	_SYNTAX_ERROR   parseErrorType = 1
+	_RECORD_ERROR   parseErrorType = 2
+	_DATA_ERROR     parseErrorType = 3
+	_CHECKSUM_ERROR parseErrorType = 4
 )
 
 type parseError struct {
@@ -22,13 +22,13 @@ type parseError struct {
 func (e *parseError) Error() string {
 	var str string = "error"
 	switch e.errorType {
-	case SYNTAX_ERROR:
+	case _SYNTAX_ERROR:
 		str = "syntax error"
-	case RECORD_ERROR:
+	case _RECORD_ERROR:
 		str = "record error"
-	case DATA_ERROR:
+	case _DATA_ERROR:
 		str = "data error"
-	case CHECKSUM_ERROR:
+	case _CHECKSUM_ERROR:
 		str = "checksum error"
 	}
 	return fmt.Sprintf("%s: %s at line %d", str, e.message, e.lineNum)
