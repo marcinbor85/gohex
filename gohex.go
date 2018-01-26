@@ -3,8 +3,8 @@ package gohex
 import (
 	"bufio"
 	"encoding/hex"
-	"strings"
 	"sort"
+	"strings"
 )
 
 // Constants definitions of IntelHex record types
@@ -17,8 +17,8 @@ const (
 
 // Structure with binary data segment fields
 type DataSegment struct {
-	Data    []byte
 	Address int
+	Data    []byte
 }
 
 // Helper type for data segments sorting operations
@@ -29,12 +29,12 @@ func (segs sortByAddress) Swap(i, j int)      { segs[i], segs[j] = segs[j], segs
 func (segs sortByAddress) Less(i, j int) bool { return segs[i].Address < segs[j].Address }
 
 type Memory struct {
-	dataSegments   []*DataSegment
-	startAddress   int
+	dataSegments    []*DataSegment
+	startAddress    int
 	extendedAddress int
-	eofFlag        bool
-	startFlag      bool
-	lineNum        int
+	eofFlag         bool
+	startFlag       bool
+	lineNum         int
 }
 
 func NewMemory() *Memory {
@@ -44,7 +44,7 @@ func NewMemory() *Memory {
 }
 
 // Method to retrieve start address from IntelHex data
-func (m *Memory) GetStartAddress() (int, bool) {
+func (m *Memory) GetStartAddress() (adr int, ok bool) {
 	if m.startFlag {
 		return m.startAddress, true
 	}
@@ -73,7 +73,7 @@ func (m *Memory) AddBinary(adr int, bytes []byte) error {
 			((adr < s.Address) && (adr+len(bytes) > s.Address)) {
 			return newParseError(DATA_ERROR, "data segments overlap", m.lineNum)
 		}
-		
+
 		if adr == s.Address+len(s.Data) {
 			s.Data = append(s.Data, bytes...)
 			return nil
