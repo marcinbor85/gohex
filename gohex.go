@@ -49,6 +49,27 @@ func (m *Memory) Clear() {
 	m.eofFlag = false
 }
 
+func (m *Memory) AddBinary(adr int, bytes []byte) error {
+	for _, s := range m.dataSegments {
+		if ((adr >= s.address) && (adr < s.address+len(s.data))) ||
+			((adr < s.address) && (adr+len(bytes) > s.address)) {
+			return newParseError(DATA_ERROR, "data segments overlap", m.lineNum)
+		}
+		
+		if adr == s.address+len(s.data) {
+			s.data = append(s.data, bytes...)
+			return nil
+		}
+		if adr+len(bytes) == s.address {
+			s.address = adr
+			s.data = append(bytes, s.data...)
+			return nil
+		}
+	}
+	m.dataSegments = append(m.dataSegments, &DataSegment{address: adr, data: bytes})
+	return nil
+}
+
 func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 	if len(bytes) < 5 {
 		return newParseError(DATA_ERROR, "not enought data bytes", m.lineNum)
@@ -65,23 +86,10 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 	case DATA_RECORD:
 		adr, data := getDataLine(bytes)
 		adr += m.extendedAddress
-		for _, s := range m.dataSegments {
-			if ((adr >= s.address) && (adr < s.address+len(s.data))) ||
-				((adr < s.address) && (adr+len(data) > s.address)) {
-				return newParseError(DATA_ERROR, "data segments overlap", m.lineNum)
-			}
-			
-			if adr == s.address+len(s.data) {
-				s.data = append(s.data, data...)
-				return nil
-			}
-			if adr+len(data) == s.address {
-				s.address = adr
-				s.data = append(data, s.data...)
-				return nil
-			}
+		err = m.AddBinary(adr, data)
+		if err != nil {
+			return err
 		}
-		m.dataSegments = append(m.dataSegments, &DataSegment{address: adr, data: data})
 	case EOF_RECORD:
 		err = checkEOF(bytes)
 		if err != nil {
