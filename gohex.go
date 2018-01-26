@@ -27,7 +27,7 @@ func (segs sortByAddress) Less(i, j int) bool { return segs[i].address < segs[j]
 
 type Memory struct {
 	dataSegments   []*DataSegment
-	startAddress   *int
+	startAddress   int
 	extendedAddress int
 	eofFlag        bool
 	startFlag      bool
@@ -41,8 +41,8 @@ func NewMemory() *Memory {
 }
 
 func (m *Memory) GetStartAddress() (int, bool) {
-	if m.startAddress != nil {
-		return *m.startAddress, true
+	if m.startFlag {
+		return m.startAddress, true
 	}
 	return 0, false
 }
@@ -54,7 +54,7 @@ func (m *Memory) GetDataSegments() []*DataSegment {
 }
 
 func (m *Memory) Clear() {
-	m.startAddress = nil
+	m.startAddress = 0
 	m.extendedAddress = 0
 	m.lineNum = 0
 	m.dataSegments = []*DataSegment{}
@@ -118,8 +118,7 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 		if m.startFlag == true {
 			return newParseError(DATA_ERROR, "multiple start address lines", m.lineNum)
 		}
-		a, err := getStartAddress(bytes)
-		m.startAddress = &a
+		m.startAddress, err = getStartAddress(bytes)
 		if err != nil {
 			return newParseError(RECORD_ERROR, err.Error(), m.lineNum)
 		}
