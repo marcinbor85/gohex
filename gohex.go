@@ -9,16 +9,16 @@ import (
 
 // Constants definitions of IntelHex record types
 const (
-	DATA_RECORD    byte = 0
-	EOF_RECORD     byte = 1
-	ADDRESS_RECORD byte = 4
-	START_RECORD   byte = 5
+	DATA_RECORD    byte = 0 // Record with data bytes
+	EOF_RECORD     byte = 1 // Record with end of file indicator
+	ADDRESS_RECORD byte = 4 // Record with extended linear address
+	START_RECORD   byte = 5 // Record with start linear address
 )
 
 // Structure with binary data segment fields
 type DataSegment struct {
-	Address int
-	Data    []byte
+	Address int // Starting address of data segment
+	Data    []byte // Data segment bytes
 }
 
 // Helper type for data segments sorting operations
