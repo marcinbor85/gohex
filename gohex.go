@@ -78,31 +78,25 @@ func (m *Memory) Clear() {
 }
 
 func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
-	for _, s := range m.dataSegments {
-		if (adr >= s.Address) && (adr < s.Address+uint32(len(s.Data))) {
-			// jesli nowe dane zaczynają się w segmencie który już istnieje ale też kończą się przed jego końcem
-			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
-		}
-		if (adr < s.Address) && (adr+uint32(len(bytes)) > s.Address) {
-			// jeśli nowe dane kończą się w za początkiem istniejącego segmentu ale zaczynają się przed jego początkiem
-			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
-		}
-	}
-
 	var segBefore *DataSegment = nil
 	var segAfter *DataSegment = nil
 	var segAfterIndex int
 	for i, s := range m.dataSegments {
+		if (adr >= s.Address) && (adr < s.Address+uint32(len(s.Data))) {
+			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
+		}
+		if (adr < s.Address) && (adr+uint32(len(bytes)) > s.Address) {
+			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
+		}
+		
 		if adr == s.Address+uint32(len(s.Data)) {
-			// jeśli nowe dane zaczynają się tu gdzie segment się kończy
 			segBefore = s
 		}
 		if adr+uint32(len(bytes)) == s.Address {
-			// jeśli nowe dane kończą się tu gdzie segment się zaczyna
 			segAfter, segAfterIndex = s, i
 		}
 	}
-
+	
 	if segBefore != nil && segAfter != nil {
 		segBefore.Data = append(segBefore.Data, bytes...)
 		segBefore.Data = append(segBefore.Data, segAfter.Data...)
@@ -199,35 +193,45 @@ func (m *Memory) ParseIntelHex(reader io.Reader) error {
 	return nil
 }
 
-func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) error {
+func (m *Memory) dumpDataSegment(writer io.Writer, s *DataSegment, lineLength byte) {
+	lineAdr := s.Address
+	lineData := []byte{}
+	for byteAdr := s.Address; byteAdr < s.Address+uint32(len(s.Data)); byteAdr++ {
+		if (byteAdr & 0xFFFF0000) != m.extendedAddress {
+			if len(lineData) != 0 {
+				writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+			}
+			m.extendedAddress = (byteAdr & 0xFFFF0000)
+			writeExtendedAddressLine(writer, m.extendedAddress)
+		}
+		if len(lineData) >= int(lineLength) {
+			writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+		}
+		lineData = append(lineData, s.Data[byteAdr-s.Address])
+	}
+
+	if len(lineData) != 0 {
+		writeDataLine(writer, &lineAdr, 0, &lineData)
+	}
+}
+
+func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) {
 	if m.startFlag {
 		writeStartAddressLine(writer, m.startAddress)
 	}
 
 	m.extendedAddress = 0
 	for _, s := range m.dataSegments {
-		lineAdr := s.Address
-		lineData := []byte{}
-		for byteAdr := s.Address; byteAdr < s.Address+uint32(len(s.Data)); byteAdr++ {
-			if (byteAdr & 0xFFFF0000) != m.extendedAddress {
-				if len(lineData) != 0 {
-					writeDataLine(writer, &lineAdr, byteAdr, &lineData)
-				}
-				m.extendedAddress = (byteAdr & 0xFFFF0000)
-				writeExtendedAddressLine(writer, m.extendedAddress)
-			}
-			if len(lineData) >= int(lineLength) {
-				writeDataLine(writer, &lineAdr, byteAdr, &lineData)
-			}
-			lineData = append(lineData, s.Data[byteAdr-s.Address])
-		}
-
-		if len(lineData) != 0 {
-			writeDataLine(writer, &lineAdr, 0, &lineData)
-		}
+		m.dumpDataSegment(writer, s, lineLength)
 	}
 
 	writeEofLine(writer)
+}
 
-	return nil
+func (m *Memory) ToBinary(address uint32, size uint32, padding byte) []byte {
+	data := []byte{}
+	
+	
+	
+	return data
 }
