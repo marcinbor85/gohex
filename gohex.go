@@ -229,9 +229,26 @@ func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) {
 }
 
 func (m *Memory) ToBinary(address uint32, size uint32, padding byte) []byte {
-	data := []byte{}
+	data := make([]byte, size)
 	
-	
+	i := uint32(0)
+	for i < size {
+		ok := false
+		for _, s := range m.dataSegments {
+			if (address >= s.Address) && (address < s.Address + uint32(len(s.Data))) {
+				data[i] = s.Data[address - s.Address]
+				i++
+				address++
+				ok = true
+				break
+			}
+		}
+		if ok == false {
+			data[i] = padding
+			i++
+			address++
+		}
+	}
 	
 	return data
 }

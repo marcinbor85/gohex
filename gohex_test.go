@@ -526,5 +526,19 @@ func TestDumpIntelHex(t *testing.T) {
 }
 
 func TestToBinary(t *testing.T) {
-	//m := NewMemory()
+	m := NewMemory()
+	m.AddBinary(0x20000000, []byte{11, 12, 13, 14})
+	m.AddBinary(0xA, []byte{9, 10, 11, 12})
+	m.AddBinary(0x4, []byte{5, 6, 7, 8})
+	
+	data := m.ToBinary(0, 16, 0xFF)
+	org := []byte{0xFF, 0xFF, 0xFF, 0xFF, 5,6,7,8,0xFF,0xFF,9,10,11,12,0xFF,0xFF}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	data = m.ToBinary(0x1FFFFFFF, 8, 0)
+	org = []byte{0, 11, 12, 13, 14, 0, 0, 0}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
 }
