@@ -19,7 +19,7 @@ const (
 
 // Structure with binary data segment fields
 type DataSegment struct {
-	Address int    // Starting address of data segment
+	Address uint32    // Starting address of data segment
 	Data    []byte // Data segment bytes
 }
 
@@ -33,11 +33,11 @@ func (segs sortByAddress) Less(i, j int) bool { return segs[i].Address < segs[j]
 // Main structure with private fields of IntelHex parser
 type Memory struct {
 	dataSegments    []*DataSegment // Slice with pointers to DataSegments
-	startAddress    int            // Start linear address
-	extendedAddress int            // Extended linear address
+	startAddress    uint32            // Start linear address
+	extendedAddress uint32            // Extended linear address
 	eofFlag         bool           // End of file record exist flag
 	startFlag       bool           // Start address record exist flag
-	lineNum         int            // Parser input line number
+	lineNum         uint            // Parser input line number
 }
 
 // Constructor of Memory structure
@@ -48,7 +48,7 @@ func NewMemory() *Memory {
 }
 
 // Method to getting start address from IntelHex data
-func (m *Memory) GetStartAddress() (adr int, ok bool) {
+func (m *Memory) GetStartAddress() (adr uint32, ok bool) {
 	if m.startFlag {
 		return m.startAddress, true
 	}
@@ -56,7 +56,7 @@ func (m *Memory) GetStartAddress() (adr int, ok bool) {
 }
 
 // Method to setting start address to IntelHex data
-func (m *Memory) SetStartAddress(adr int) {
+func (m *Memory) SetStartAddress(adr uint32) {
 	m.startAddress = adr
 	m.startFlag = true
 }
@@ -80,13 +80,13 @@ func (m *Memory) Clear() {
 	m.eofFlag = false
 }
 
-func (m *Memory) AddBinary(adr int, bytes []byte) error {
+func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 	for _, s := range m.dataSegments {
-		if (adr >= s.Address) && (adr < s.Address+len(s.Data)) {
+		if (adr >= s.Address) && (adr < s.Address+uint32(len(s.Data))) {
 			// jesli nowe dane zaczynają się w segmencie który już istnieje ale też kończą się przed jego końcem
 			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
-		if (adr < s.Address) && (adr+len(bytes) > s.Address) {
+		if (adr < s.Address) && (adr+uint32(len(bytes)) > s.Address) {
 			// jeśli nowe dane kończą się w za początkiem istniejącego segmentu ale zaczynają się przed jego początkiem
 			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
@@ -96,11 +96,11 @@ func (m *Memory) AddBinary(adr int, bytes []byte) error {
 	var segAfter *DataSegment = nil
 	var segAfterIndex int
 	for i, s := range m.dataSegments {
-		if adr == s.Address+len(s.Data) {
+		if adr == s.Address+uint32(len(s.Data)) {
 			// jeśli nowe dane zaczynają się tu gdzie segment się kończy
 			segBefore = s
 		}
-		if adr+len(bytes) == s.Address {
+		if adr+uint32(len(bytes)) == s.Address {
 			// jeśli nowe dane kończą się tu gdzie segment się zaczyna
 			segAfter, segAfterIndex = s, i
 		}
@@ -136,8 +136,8 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 	}
 	switch record_type := bytes[3]; record_type {
 	case _DATA_RECORD:
-		adr, data := getDataLine(bytes)
-		adr += m.extendedAddress
+		a, data := getDataLine(bytes)
+		adr := uint32(a) + m.extendedAddress
 		err = m.AddBinary(adr, data)
 		if err != nil {
 			return err

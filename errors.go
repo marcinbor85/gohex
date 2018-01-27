@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type parseErrorType int
+type parseErrorType uint
 
 const (
 	_SYNTAX_ERROR   parseErrorType = 1
@@ -16,7 +16,7 @@ const (
 type parseError struct {
 	errorType parseErrorType
 	message   string
-	lineNum   int
+	lineNum   uint
 }
 
 func (e *parseError) Error() string {
@@ -34,6 +34,6 @@ func (e *parseError) Error() string {
 	return fmt.Sprintf("%s: %s at line %d", str, e.message, e.lineNum)
 }
 
-func newParseError(et parseErrorType, msg string, line int) error {
+func newParseError(et parseErrorType, msg string, line uint) error {
 	return &parseError{errorType: et, message: msg, lineNum: line}
 }
