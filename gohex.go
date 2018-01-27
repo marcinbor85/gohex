@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"io"
 	"sort"
+	_ "strings"
+	_ "fmt"
 )
 
 // Constants definitions of IntelHex record types
@@ -80,22 +82,43 @@ func (m *Memory) Clear() {
 
 func (m *Memory) AddBinary(adr int, bytes []byte) error {
 	for _, s := range m.dataSegments {
-		if ((adr >= s.Address) && (adr < s.Address+len(s.Data))) ||
-			((adr < s.Address) && (adr+len(bytes) > s.Address)) {
+		if (adr >= s.Address) && (adr < s.Address+len(s.Data)) {
+			// jesli nowe dane zaczynają się w segmencie który już istnieje ale też kończą się przed jego końcem
 			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
-
-		if adr == s.Address+len(s.Data) {
-			s.Data = append(s.Data, bytes...)
-			return nil
-		}
-		if adr+len(bytes) == s.Address {
-			s.Address = adr
-			s.Data = append(bytes, s.Data...)
-			return nil
+		if (adr < s.Address) && (adr+len(bytes) > s.Address) {
+			// jeśli nowe dane kończą się w za początkiem istniejącego segmentu ale zaczynają się przed jego początkiem
+			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
 	}
-	m.dataSegments = append(m.dataSegments, &DataSegment{Address: adr, Data: bytes})
+	
+	var segBefore *DataSegment = nil
+	var segAfter *DataSegment = nil
+	var segAfterIndex int
+	for i, s := range m.dataSegments {
+		if adr == s.Address+len(s.Data) {
+			// jeśli nowe dane zaczynają się tu gdzie segment się kończy
+			segBefore = s
+		}
+		if adr+len(bytes) == s.Address {
+			// jeśli nowe dane kończą się tu gdzie segment się zaczyna
+			segAfter, segAfterIndex = s, i
+		}
+	}
+	
+	if segBefore != nil && segAfter != nil {
+		segBefore.Data = append(segBefore.Data, bytes...)
+		segBefore.Data = append(segBefore.Data, segAfter.Data...)
+		m.dataSegments = append(m.dataSegments[:segAfterIndex], m.dataSegments[segAfterIndex+1:]...)
+		
+	} else if segBefore != nil && segAfter == nil {
+		segBefore.Data = append(segBefore.Data, bytes...)
+	} else if segBefore == nil && segAfter != nil {
+		segAfter.Address = adr
+		segAfter.Data = append(bytes, segAfter.Data...)
+	} else {
+		m.dataSegments = append(m.dataSegments, &DataSegment{Address: adr, Data: bytes})
+	}
 	return nil
 }
 
@@ -179,5 +202,10 @@ func (m *Memory) ParseIntelHex(reader io.Reader) error {
 }
 
 func (m *Memory) DumpIntelHex(writer io.Writer) error {
+	/*if m.startFlag {
+		s := hex.EncodeToString(src)DecodeString(line[1:])
+
+		writer.Write(strings.bytes.)
+	}*/
 	return nil
 }
