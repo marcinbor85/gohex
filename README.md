@@ -9,8 +9,8 @@ https://godoc.org/github.com/marcinbor85/gohex
 * robust intelhex parsing (full test coverage)
 * support i32hex format
 * two-way converting hex<->bin
-* trivial but powerful api (only the most commonly used functions
-* interface-based io functions (easy to use)
+* trivial but powerful api (only the most commonly used functions)
+* interface-based IO functions
 
 ## Examples:
 
