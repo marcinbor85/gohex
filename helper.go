@@ -2,8 +2,11 @@ package gohex
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
+	"strings"
 )
 
 func calcSum(bytes []byte) byte {
@@ -67,10 +70,42 @@ func getStartAddress(bytes []byte) (adr uint32, err error) {
 	if binary.BigEndian.Uint16(bytes[1:3]) != 0 {
 		return 0, errors.New("incorrect address field in start address line")
 	}
-	adr = uint32(binary.BigEndian.Uint32(bytes[4:8]))
+	adr = binary.BigEndian.Uint32(bytes[4:8])
 	return adr, nil
 }
 
-func makeLine(size byte, adr uint16, recordType byte, data []byte) {
-	//fmt.Sprintf(":04000005, a)
+func makeDataLine(adr uint16, recordType byte, data []byte) []byte {
+	line := make([]byte, 5+len(data))
+	line[0] = byte(len(data))
+	binary.BigEndian.PutUint16(line[1:3], adr)
+	line[3] = recordType
+	copy(line[4:], data)
+	line[len(line)-1] = calcSum(line[:len(line)-1])
+	return line
+}
+
+func writeDataLine(writer io.Writer, lineAdr *uint32, byteAdr uint32, lineData *[]byte) {
+	s := strings.ToUpper(hex.EncodeToString(makeDataLine(uint16(*lineAdr&0x0000FFFF), _DATA_RECORD, *lineData)))
+	fmt.Fprintf(writer, ":%s\n", s)
+	*lineAdr = byteAdr
+	*lineData = []byte{}
+}
+
+func writeStartAddressLine(writer io.Writer, startAdr uint32) {
+	a := make([]byte, 4)
+	binary.BigEndian.PutUint32(a, startAdr)
+	s := strings.ToUpper(hex.EncodeToString(makeDataLine(0, _START_RECORD, a)))
+	fmt.Fprintf(writer, ":%s\n", s)
+}
+
+func writeExtendedAddressLine(writer io.Writer, extAdr uint32) {
+	a := make([]byte, 2)
+	binary.BigEndian.PutUint16(a, uint16(extAdr>>16))
+	s := strings.ToUpper(hex.EncodeToString(makeDataLine(0, _ADDRESS_RECORD, a)))
+	fmt.Fprintf(writer, ":%s\n", s)
+}
+
+func writeEofLine(writer io.Writer) {
+	s := strings.ToUpper(hex.EncodeToString(makeDataLine(0, _EOF_RECORD, []byte{})))
+	fmt.Fprintf(writer, ":%s\n", s)
 }

@@ -1,11 +1,10 @@
 package gohex
 
 import (
+	"bytes"
 	"reflect"
 	"strings"
 	"testing"
-	"bytes"
-	"fmt"
 )
 
 func TestConstructor(t *testing.T) {
@@ -42,7 +41,7 @@ func checkErrorType(t *testing.T, err error, et parseErrorType, msg string) {
 }
 
 func assertParseError(t *testing.T, m *Memory, input string, et parseErrorType, err string) {
-	e := parseIntelHex(m, input);
+	e := parseIntelHex(m, input)
 	checkErrorType(t, e, et, err)
 }
 
@@ -317,9 +316,9 @@ func TestAddBinary(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 	err = m.AddBinary(0x15000, []byte{1, 2, 3, 4})
-	
+
 	m.Clear()
-	
+
 	err = m.AddBinary(0x0008, []byte{9, 10, 11, 12})
 	err = m.AddBinary(0x0000, []byte{1, 2, 3, 4})
 	err = m.AddBinary(0x0004, []byte{5, 6, 7, 8})
@@ -329,23 +328,23 @@ func TestAddBinary(t *testing.T) {
 	if len(m.GetDataSegments()) != 1 {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
-	
+
 	seg = m.GetDataSegments()[0]
 	p = DataSegment{Address: 0x0000, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}}
 	if reflect.DeepEqual(seg, p) == false {
 		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
-	
+
 }
 
 func TestDataOverlaps(t *testing.T) {
 	m := NewMemory()
-	
+
 	err := m.AddBinary(0x0004, []byte{1, 2, 3, 4})
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
-	
+
 	err = m.AddBinary(0x0000, []byte{5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16})
 	checkErrorType(t, err, _DATA_ERROR, "no data segments overlaps error")
 	err = m.AddBinary(0x0005, []byte{5, 6})
@@ -354,12 +353,12 @@ func TestDataOverlaps(t *testing.T) {
 	checkErrorType(t, err, _DATA_ERROR, "no data segments overlaps error")
 	err = m.AddBinary(0x0006, []byte{1, 2, 3, 4})
 	checkErrorType(t, err, _DATA_ERROR, "no data segments overlaps error")
-	
+
 	err = m.AddBinary(0x0008, []byte{5})
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
-	
+
 	if len(m.GetDataSegments()) != 1 {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
@@ -369,35 +368,35 @@ func TestDataOverlaps(t *testing.T) {
 		t.Errorf("incorrect segment: %v != %v", seg, p)
 	}
 }
-	
+
 func TestSetStartMemory(t *testing.T) {
 	m := NewMemory()
 	m.SetStartAddress(0x12345678)
-	
+
 	if a, ok := m.GetStartAddress(); a != 0x12345678 || ok != true {
 		t.Errorf("wrong start address: %v", a)
 	}
-	
+
 	err := parseIntelHex(m, ":020000049ABCA4\n:048000000102030472\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
-	
+
 	if a, ok := m.GetStartAddress(); a != 0 || ok != false {
 		t.Errorf("wrong start address: %v", a)
 	}
-	
+
 	err = parseIntelHex(m, ":020000049ABCA4\n:0400000591929394AD\n:048000000102030472\n:00000001FF\n")
 	if err != nil {
 		t.Error("unexpected error: ", err.Error())
 	}
-	
+
 	if a, ok := m.GetStartAddress(); a != 0x91929394 || ok != true {
 		t.Errorf("wrong start address: %v", a)
 	}
-	
+
 	m.SetStartAddress(0x23456789)
-	
+
 	if a, ok := m.GetStartAddress(); a != 0x23456789 || ok != true {
 		t.Errorf("wrong start address: %v", a)
 	}
@@ -406,11 +405,126 @@ func TestSetStartMemory(t *testing.T) {
 func TestDumpIntelHex(t *testing.T) {
 	m := NewMemory()
 	m.SetStartAddress(0x12345678)
-	m.AddBinary(0x10000, []byte{1,2,3,4})
-	m.AddBinary(0x18000, []byte{11,12,13,14})
-	m.AddBinary(0x20000, []byte{5,6,7,8})
+	m.AddBinary(0x18000, []byte{1, 2, 3, 4})
+	m.AddBinary(0x20000000, []byte{11, 12, 13, 14})
+	m.AddBinary(0x8, []byte{9, 10, 11, 12})
+	m.AddBinary(0x0, []byte{1, 2, 3, 4})
+	m.AddBinary(0x4, []byte{5, 6, 7, 8})
 	buf := bytes.Buffer{}
-	m.DumpIntelHex(&buf)
-	fmt.Printf("bytes: %v\n", buf.Bytes())
-	fmt.Printf("string: %v\n", buf.String())
+	m.DumpIntelHex(&buf, 16)
+	dump := buf.String()
+	oks := ":0400000512345678E3\n" +
+		":0C0000000102030405060708090A0B0CA6\n" +
+		":020000040001F9\n" +
+		":048000000102030472\n" +
+		":020000042000DA\n" +
+		":040000000B0C0D0ECA\n" +
+		":00000001FF\n"
+
+	if buf.String() != oks {
+		t.Errorf("wrong hex dump:\n%v", dump)
+	}
+
+	m.Clear()
+
+	err := parseIntelHex(m, buf.String())
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if len(m.GetDataSegments()) != 3 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+	seg := m.GetDataSegments()[0]
+	p := DataSegment{Address: 0x0000, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+	seg = m.GetDataSegments()[1]
+	p = DataSegment{Address: 0x18000, Data: []byte{1, 2, 3, 4}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+	seg = m.GetDataSegments()[2]
+	p = DataSegment{Address: 0x20000000, Data: []byte{11, 12, 13, 14}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+
+	m.Clear()
+	m.AddBinary(0xFFFC, []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24})
+	m.AddBinary(0x10040, []byte{1, 2, 3, 4})
+	buf = bytes.Buffer{}
+	m.DumpIntelHex(&buf, 16)
+	dump = buf.String()
+	oks = ":04FFFC0001020304F7\n" +
+		":020000040001F9\n" +
+		":1000000005060708090A0B0C0D0E0F101112131428\n" +
+		":040010001516171892\n" +
+		":0400400001020304B2\n" +
+		":00000001FF\n"
+	if buf.String() != oks {
+		t.Errorf("wrong hex dump:\n%v", dump)
+	}
+
+	m.Clear()
+
+	err = parseIntelHex(m, buf.String())
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if len(m.GetDataSegments()) != 2 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+	seg = m.GetDataSegments()[0]
+	p = DataSegment{Address: 0xFFFC, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+	seg = m.GetDataSegments()[1]
+	p = DataSegment{Address: 0x10040, Data: []byte{1, 2, 3, 4}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+
+	m.Clear()
+	d := make([]byte, 512)
+	m.AddBinary(0x2FF20, d)
+	buf = bytes.Buffer{}
+	m.DumpIntelHex(&buf, 64)
+	dump = buf.String()
+	oks = ":020000040002F8\n" +
+		":40FF200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000A1\n" +
+		":40FF60000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000061\n" +
+		":40FFA0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021\n" +
+		":20FFE000000000000000000000000000000000000000000000000000000000000000000001\n" +
+		":020000040003F7\n" +
+		":4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0\n" +
+		":400040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080\n" +
+		":400080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040\n" +
+		":4000C0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n" +
+		":200100000000000000000000000000000000000000000000000000000000000000000000DF\n" +
+		":00000001FF\n"
+
+	if buf.String() != oks {
+		t.Errorf("wrong hex dump:\n%v", dump)
+	}
+
+	m.Clear()
+
+	err = parseIntelHex(m, buf.String())
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if len(m.GetDataSegments()) != 1 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+	seg = m.GetDataSegments()[0]
+	p = DataSegment{Address: 0x2FF20, Data: make([]byte, 512)}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+}
+
+func TestToBinary(t *testing.T) {
+	//m := NewMemory()
 }

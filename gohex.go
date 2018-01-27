@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"io"
 	"sort"
-	_ "strings"
-	_ "fmt"
 )
 
 // Constants definitions of IntelHex record types
@@ -19,12 +17,12 @@ const (
 
 // Structure with binary data segment fields
 type DataSegment struct {
-	Address uint32    // Starting address of data segment
+	Address uint32 // Starting address of data segment
 	Data    []byte // Data segment bytes
 }
 
 // Helper type for data segments sorting operations
-type sortByAddress []DataSegment
+type sortByAddress []*DataSegment
 
 func (segs sortByAddress) Len() int           { return len(segs) }
 func (segs sortByAddress) Swap(i, j int)      { segs[i], segs[j] = segs[j], segs[i] }
@@ -33,11 +31,11 @@ func (segs sortByAddress) Less(i, j int) bool { return segs[i].Address < segs[j]
 // Main structure with private fields of IntelHex parser
 type Memory struct {
 	dataSegments    []*DataSegment // Slice with pointers to DataSegments
-	startAddress    uint32            // Start linear address
-	extendedAddress uint32            // Extended linear address
+	startAddress    uint32         // Start linear address
+	extendedAddress uint32         // Extended linear address
 	eofFlag         bool           // End of file record exist flag
 	startFlag       bool           // Start address record exist flag
-	lineNum         uint            // Parser input line number
+	lineNum         uint           // Parser input line number
 }
 
 // Constructor of Memory structure
@@ -67,7 +65,6 @@ func (m *Memory) GetDataSegments() []DataSegment {
 	for _, s := range m.dataSegments {
 		segs = append(segs, *s)
 	}
-	sort.Sort(sortByAddress(segs))
 	return segs
 }
 
@@ -91,7 +88,7 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
 	}
-	
+
 	var segBefore *DataSegment = nil
 	var segAfter *DataSegment = nil
 	var segAfterIndex int
@@ -105,12 +102,12 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 			segAfter, segAfterIndex = s, i
 		}
 	}
-	
+
 	if segBefore != nil && segAfter != nil {
 		segBefore.Data = append(segBefore.Data, bytes...)
 		segBefore.Data = append(segBefore.Data, segAfter.Data...)
 		m.dataSegments = append(m.dataSegments[:segAfterIndex], m.dataSegments[segAfterIndex+1:]...)
-		
+
 	} else if segBefore != nil && segAfter == nil {
 		segBefore.Data = append(segBefore.Data, bytes...)
 	} else if segBefore == nil && segAfter != nil {
@@ -119,6 +116,7 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 	} else {
 		m.dataSegments = append(m.dataSegments, &DataSegment{Address: adr, Data: bytes})
 	}
+	sort.Sort(sortByAddress(m.dataSegments))
 	return nil
 }
 
@@ -201,11 +199,35 @@ func (m *Memory) ParseIntelHex(reader io.Reader) error {
 	return nil
 }
 
-func (m *Memory) DumpIntelHex(writer io.Writer) error {
-	/*if m.startFlag {
-		s := hex.EncodeToString(src)DecodeString(line[1:])
+func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) error {
+	if m.startFlag {
+		writeStartAddressLine(writer, m.startAddress)
+	}
 
-		writer.Write(strings.bytes.)
-	}*/
+	m.extendedAddress = 0
+	for _, s := range m.dataSegments {
+		lineAdr := s.Address
+		lineData := []byte{}
+		for byteAdr := s.Address; byteAdr < s.Address+uint32(len(s.Data)); byteAdr++ {
+			if (byteAdr & 0xFFFF0000) != m.extendedAddress {
+				if len(lineData) != 0 {
+					writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+				}
+				m.extendedAddress = (byteAdr & 0xFFFF0000)
+				writeExtendedAddressLine(writer, m.extendedAddress)
+			}
+			if len(lineData) >= int(lineLength) {
+				writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+			}
+			lineData = append(lineData, s.Data[byteAdr-s.Address])
+		}
+
+		if len(lineData) != 0 {
+			writeDataLine(writer, &lineAdr, 0, &lineData)
+		}
+	}
+
+	writeEofLine(writer)
+
 	return nil
 }
