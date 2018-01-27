@@ -68,6 +68,7 @@ func (m *Memory) GetDataSegments() []DataSegment {
 	return segs
 }
 
+// Method to clear memory structure
 func (m *Memory) Clear() {
 	m.startAddress = 0
 	m.extendedAddress = 0
@@ -77,6 +78,7 @@ func (m *Memory) Clear() {
 	m.eofFlag = false
 }
 
+// Method to add binary data to memory (auto segmented and sorted)
 func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 	var segBefore *DataSegment = nil
 	var segAfter *DataSegment = nil
@@ -172,6 +174,7 @@ func (m *Memory) parseIntelHexLine(line string) error {
 	return m.parseIntelHexRecord(bytes)
 }
 
+// Method to parsing IntelHex data and add into memory
 func (m *Memory) ParseIntelHex(reader io.Reader) error {
 	scanner := bufio.NewScanner(reader)
 	m.Clear()
@@ -215,6 +218,7 @@ func (m *Memory) dumpDataSegment(writer io.Writer, s *DataSegment, lineLength by
 	}
 }
 
+// Method to dumping IntelHex data previously loaded into memory
 func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) {
 	if m.startFlag {
 		writeStartAddressLine(writer, m.startAddress)
@@ -228,6 +232,7 @@ func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) {
 	writeEofLine(writer)
 }
 
+// Method to load binary data previously loaded into memory
 func (m *Memory) ToBinary(address uint32, size uint32, padding byte) []byte {
 	data := make([]byte, size)
 	
