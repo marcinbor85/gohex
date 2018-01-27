@@ -6,14 +6,19 @@ import (
 	"fmt"
 )
 
-func checkSum(bytes []byte) error {
+func calcSum(bytes []byte) byte {
 	sum := 0
-	for _, b := range bytes[:len(bytes)-1] {
+	for _, b := range bytes {
 		sum += int(b)
 	}
 	sum %= 256
 	sum = 256 - sum
-	last := int(bytes[len(bytes)-1])
+	return byte(sum)
+}
+
+func checkSum(bytes []byte) error {
+	sum := calcSum(bytes[:len(bytes)-1])
+	last := bytes[len(bytes)-1]
 	if sum != last {
 		return errors.New("incorrect checksum (sum = " + fmt.Sprintf("%02X != %02X", sum, last) + ")")
 	}
@@ -64,4 +69,8 @@ func getStartAddress(bytes []byte) (int, error) {
 	}
 	adr := int(binary.BigEndian.Uint32(bytes[4:8]))
 	return adr, nil
+}
+
+func makeLine(size int, adr int, recordType byte, data []byte) {
+	//fmt.Sprintf(":04000005, a)
 }
