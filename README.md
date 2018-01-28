@@ -26,10 +26,10 @@ import (
 
 func main() {
 	file, err := os.Open("example.hex")
-	defer file.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 	
 	mem := gohex.NewMemory()
 	err = mem.ParseIntelHex(file)
@@ -55,10 +55,10 @@ import (
 
 func main() {
 	file, err := os.Create("output.hex")
-	defer file.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 	
 	mem := gohex.NewMemory()
 	mem.SetStartAddress(0x80008000)

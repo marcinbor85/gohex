@@ -8,10 +8,10 @@ import (
 
 func main() {
 	file, err := os.Open("example.hex")
-	defer file.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 	
 	mem := gohex.NewMemory()
 	err = mem.ParseIntelHex(file)
