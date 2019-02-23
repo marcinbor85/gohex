@@ -196,52 +196,65 @@ func (m *Memory) ParseIntelHex(reader io.Reader) error {
 	return nil
 }
 
-func (m *Memory) dumpDataSegment(writer io.Writer, s *DataSegment, lineLength byte) {
+func (m *Memory) dumpDataSegment(writer io.Writer, s *DataSegment, lineLength byte) error {
 	lineAdr := s.Address
 	lineData := []byte{}
 	for byteAdr := s.Address; byteAdr < s.Address+uint32(len(s.Data)); byteAdr++ {
 		if (byteAdr & 0xFFFF0000) != m.extendedAddress {
 			if len(lineData) != 0 {
-				writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+				err := writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+				if err != nil {
+					return err
+				}
 			}
 			m.extendedAddress = (byteAdr & 0xFFFF0000)
 			writeExtendedAddressLine(writer, m.extendedAddress)
 		}
 		if len(lineData) >= int(lineLength) {
-			writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+			err := writeDataLine(writer, &lineAdr, byteAdr, &lineData)
+			if err != nil {
+				return err
+			}
 		}
 		lineData = append(lineData, s.Data[byteAdr-s.Address])
 	}
 
 	if len(lineData) != 0 {
-		writeDataLine(writer, &lineAdr, 0, &lineData)
+		return writeDataLine(writer, &lineAdr, 0, &lineData)
 	}
+	return nil
 }
 
 // Method to dumping IntelHex data previously loaded into memory
-func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) {
+func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) error {
 	if m.startFlag {
-		writeStartAddressLine(writer, m.startAddress)
+		err := writeStartAddressLine(writer, m.startAddress)
+		if err != nil {
+			return err
+		}
 	}
 
 	m.extendedAddress = 0
 	for _, s := range m.dataSegments {
-		m.dumpDataSegment(writer, s, lineLength)
+		err := m.dumpDataSegment(writer, s, lineLength)
+		if err != nil {
+			return err
+		}
 	}
 
-	writeEofLine(writer)
+	return writeEofLine(writer)
 }
 
 // Method to load binary data previously loaded into memory
 func (m *Memory) ToBinary(address uint32, size uint32, padding byte) []byte {
 	data := make([]byte, size)
-	
+
 	i := uint32(0)
 	for i < size {
 		ok := false
 		for _, s := range m.dataSegments {
-			if (address >= s.Address) && (address < s.Address + uint32(len(s.Data))) {
-				data[i] = s.Data[address - s.Address]
+			if (address >= s.Address) && (address < s.Address+uint32(len(s.Data))) {
+				data[i] = s.Data[address-s.Address]
 				i++
 				address++
 				ok = true

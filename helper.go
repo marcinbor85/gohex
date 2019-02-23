@@ -84,18 +84,20 @@ func makeDataLine(adr uint16, recordType byte, data []byte) []byte {
 	return line
 }
 
-func writeDataLine(writer io.Writer, lineAdr *uint32, byteAdr uint32, lineData *[]byte) {
+func writeDataLine(writer io.Writer, lineAdr *uint32, byteAdr uint32, lineData *[]byte) error {
 	s := strings.ToUpper(hex.EncodeToString(makeDataLine(uint16(*lineAdr&0x0000FFFF), _DATA_RECORD, *lineData)))
-	fmt.Fprintf(writer, ":%s\n", s)
+	_, err := fmt.Fprintf(writer, ":%s\n", s)
 	*lineAdr = byteAdr
 	*lineData = []byte{}
+	return err
 }
 
-func writeStartAddressLine(writer io.Writer, startAdr uint32) {
+func writeStartAddressLine(writer io.Writer, startAdr uint32) error {
 	a := make([]byte, 4)
 	binary.BigEndian.PutUint32(a, startAdr)
 	s := strings.ToUpper(hex.EncodeToString(makeDataLine(0, _START_RECORD, a)))
-	fmt.Fprintf(writer, ":%s\n", s)
+	_, err := fmt.Fprintf(writer, ":%s\n", s)
+	return err
 }
 
 func writeExtendedAddressLine(writer io.Writer, extAdr uint32) {
@@ -105,7 +107,8 @@ func writeExtendedAddressLine(writer io.Writer, extAdr uint32) {
 	fmt.Fprintf(writer, ":%s\n", s)
 }
 
-func writeEofLine(writer io.Writer) {
+func writeEofLine(writer io.Writer) error {
 	s := strings.ToUpper(hex.EncodeToString(makeDataLine(0, _EOF_RECORD, []byte{})))
-	fmt.Fprintf(writer, ":%s\n", s)
+	_, err := fmt.Fprintf(writer, ":%s\n", s)
+	return err
 }
