@@ -642,4 +642,19 @@ func TestRemoveBinary(t *testing.T) {
 	if len(m.GetDataSegments()) != 3 {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
+
+	m.Clear()
+
+	m.AddBinary(0x00, []byte{0, 1})
+
+	m.RemoveBinary(0x02, 2)
+
+	data = m.ToBinary(0, 4, 0xFF)
+	org = []byte{0, 1, 0xFF, 0xFF}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	if len(m.GetDataSegments()) != 1 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
 }
