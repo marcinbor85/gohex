@@ -80,7 +80,7 @@ func (m *Memory) Clear() {
 	m.firstAddressFlag = false
 }
 
-func (seg *DataSegment) IsOverlap(adr uint32, size uint32) bool {
+func (seg *DataSegment) isOverlap(adr uint32, size uint32) bool {
 	if ((adr >= seg.Address) && (adr < seg.Address+uint32(len(seg.Data)))) ||
 		((adr < seg.Address) && (adr+size) > seg.Address) {
 		return true
@@ -108,7 +108,7 @@ func (m *Memory) removeSegment(index int) {
 
 func (m *Memory) findDataSegment(adr uint32) (seg *DataSegment, offset uint32, index int) {
 	for i, s := range m.dataSegments {
-		if s.IsOverlap(adr, 1) == true {
+		if s.isOverlap(adr, 1) == true {
 			return s, adr - s.Address, i
 		}
 	}
@@ -121,7 +121,7 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 	var segAfter *DataSegment = nil
 	var segAfterIndex int
 	for i, s := range m.dataSegments {
-		if s.IsOverlap(adr, uint32(len(bytes))) == true {
+		if s.isOverlap(adr, uint32(len(bytes))) == true {
 			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
 
