@@ -78,19 +78,33 @@ func (m *Memory) Clear() {
 	m.eofFlag = false
 }
 
+func (seg *DataSegment) IsOverlap(adr uint32, size uint32) bool {
+	if ((adr >= seg.Address) && (adr < seg.Address+uint32(len(seg.Data)))) ||
+		((adr < seg.Address) && (adr+size) > seg.Address) {
+		return true
+	}
+	return false
+}
+
+func (m *Memory) findDataSegment(adr uint32) (seg *DataSegment, offset uint32) {
+	for _, s := range m.dataSegments {
+		if s.IsOverlap(adr, 1) == true {
+			return s, adr - s.Address
+		}
+	}
+	return nil, 0
+}
+
 // Method to add binary data to memory (auto segmented and sorted)
 func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 	var segBefore *DataSegment = nil
 	var segAfter *DataSegment = nil
 	var segAfterIndex int
 	for i, s := range m.dataSegments {
-		if (adr >= s.Address) && (adr < s.Address+uint32(len(s.Data))) {
+		if s.IsOverlap(adr, uint32(len(bytes))) == true {
 			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
 		}
-		if (adr < s.Address) && (adr+uint32(len(bytes)) > s.Address) {
-			return newParseError(_DATA_ERROR, "data segments overlap", m.lineNum)
-		}
-		
+
 		if adr == s.Address+uint32(len(s.Data)) {
 			segBefore = s
 		}
@@ -98,7 +112,7 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 			segAfter, segAfterIndex = s, i
 		}
 	}
-	
+
 	if segBefore != nil && segAfter != nil {
 		segBefore.Data = append(segBefore.Data, bytes...)
 		segBefore.Data = append(segBefore.Data, segAfter.Data...)
@@ -113,6 +127,21 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 		m.dataSegments = append(m.dataSegments, &DataSegment{Address: adr, Data: bytes})
 	}
 	sort.Sort(sortByAddress(m.dataSegments))
+	return nil
+}
+
+// Method to set binary data to memory (data overlapped will change, auto segmented and sorted)
+func (m *Memory) SetBinary(adr uint32, bytes []byte) error {
+	for a, b := range bytes {
+		currentAdr := adr + uint32(a)
+		seg, offset := m.findDataSegment(currentAdr)
+
+		if seg != nil {
+			seg.Data[offset] = b
+		} else {
+			m.AddBinary(currentAdr, []byte{b})
+		}
+	}
 	return nil
 }
 
@@ -235,13 +264,13 @@ func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) {
 // Method to load binary data previously loaded into memory
 func (m *Memory) ToBinary(address uint32, size uint32, padding byte) []byte {
 	data := make([]byte, size)
-	
+
 	i := uint32(0)
 	for i < size {
 		ok := false
 		for _, s := range m.dataSegments {
-			if (address >= s.Address) && (address < s.Address + uint32(len(s.Data))) {
-				data[i] = s.Data[address - s.Address]
+			if (address >= s.Address) && (address < s.Address+uint32(len(s.Data))) {
+				data[i] = s.Data[address-s.Address]
 				i++
 				address++
 				ok = true
@@ -254,6 +283,6 @@ func (m *Memory) ToBinary(address uint32, size uint32, padding byte) []byte {
 			address++
 		}
 	}
-	
+
 	return data
 }

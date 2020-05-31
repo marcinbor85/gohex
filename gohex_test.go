@@ -530,9 +530,9 @@ func TestToBinary(t *testing.T) {
 	m.AddBinary(0x20000000, []byte{11, 12, 13, 14})
 	m.AddBinary(0xA, []byte{9, 10, 11, 12})
 	m.AddBinary(0x4, []byte{5, 6, 7, 8})
-	
+
 	data := m.ToBinary(0, 16, 0xFF)
-	org := []byte{0xFF, 0xFF, 0xFF, 0xFF, 5,6,7,8,0xFF,0xFF,9,10,11,12,0xFF,0xFF}
+	org := []byte{0xFF, 0xFF, 0xFF, 0xFF, 5, 6, 7, 8, 0xFF, 0xFF, 9, 10, 11, 12, 0xFF, 0xFF}
 	if reflect.DeepEqual(data, org) == false {
 		t.Errorf("incorrect binary data: %v", data)
 	}
@@ -540,5 +540,23 @@ func TestToBinary(t *testing.T) {
 	org = []byte{0, 11, 12, 13, 14, 0, 0, 0}
 	if reflect.DeepEqual(data, org) == false {
 		t.Errorf("incorrect binary data: %v", data)
+	}
+}
+
+func TestSetBinary(t *testing.T) {
+	m := NewMemory()
+	m.AddBinary(0x00, []byte{0, 1, 2, 3})
+	m.AddBinary(0x08, []byte{8, 9, 10, 11})
+	m.AddBinary(0x10, []byte{16, 17, 18, 19})
+
+	m.SetBinary(0x02, []byte{102, 103, 4, 5, 6, 7, 108, 109, 110, 111, 12, 13})
+
+	data := m.ToBinary(0, 20, 0xFF)
+	org := []byte{0, 1, 102, 103, 4, 5, 6, 7, 108, 109, 110, 111, 12, 13, 0xFF, 0xFF, 16, 17, 18, 19}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	if len(m.GetDataSegments()) != 2 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 }
