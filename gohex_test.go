@@ -414,6 +414,7 @@ func TestDumpIntelHex(t *testing.T) {
 	m.DumpIntelHex(&buf, 16)
 	dump := buf.String()
 	oks := ":0400000512345678E3\n" +
+		":020000040000FA\n" +
 		":0C0000000102030405060708090A0B0CA6\n" +
 		":020000040001F9\n" +
 		":048000000102030472\n" +
@@ -456,7 +457,8 @@ func TestDumpIntelHex(t *testing.T) {
 	buf = bytes.Buffer{}
 	m.DumpIntelHex(&buf, 16)
 	dump = buf.String()
-	oks = ":04FFFC0001020304F7\n" +
+	oks = ":020000040000FA\n" +
+	    ":04FFFC0001020304F7\n" +
 		":020000040001F9\n" +
 		":1000000005060708090A0B0C0D0E0F101112131428\n" +
 		":040010001516171892\n" +

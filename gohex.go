@@ -30,12 +30,13 @@ func (segs sortByAddress) Less(i, j int) bool { return segs[i].Address < segs[j]
 
 // Main structure with private fields of IntelHex parser
 type Memory struct {
-	dataSegments    []*DataSegment // Slice with pointers to DataSegments
-	startAddress    uint32         // Start linear address
-	extendedAddress uint32         // Extended linear address
-	eofFlag         bool           // End of file record exist flag
-	startFlag       bool           // Start address record exist flag
-	lineNum         uint           // Parser input line number
+	dataSegments    	[]*DataSegment 	// Slice with pointers to DataSegments
+	startAddress    	uint32         	// Start linear address
+	extendedAddress 	uint32         	// Extended linear address
+	eofFlag         	bool           	// End of file record exist flag
+	startFlag       	bool           	// Start address record exist flag
+	lineNum         	uint           	// Parser input line number
+	firstAddressFlag	bool			// Dump first address line
 }
 
 // Constructor of Memory structure
@@ -76,6 +77,7 @@ func (m *Memory) Clear() {
 	m.dataSegments = []*DataSegment{}
 	m.startFlag = false
 	m.eofFlag = false
+	m.firstAddressFlag = false
 }
 
 func (seg *DataSegment) IsOverlap(adr uint32, size uint32) bool {
@@ -229,7 +231,8 @@ func (m *Memory) dumpDataSegment(writer io.Writer, s *DataSegment, lineLength by
 	lineAdr := s.Address
 	lineData := []byte{}
 	for byteAdr := s.Address; byteAdr < s.Address+uint32(len(s.Data)); byteAdr++ {
-		if (byteAdr & 0xFFFF0000) != m.extendedAddress {
+		if ((byteAdr & 0xFFFF0000) != m.extendedAddress) || (m.firstAddressFlag == false) {
+			m.firstAddressFlag = true
 			if len(lineData) != 0 {
 				err := writeDataLine(writer, &lineAdr, byteAdr, &lineData)
 				if err != nil {
@@ -263,6 +266,7 @@ func (m *Memory) DumpIntelHex(writer io.Writer, lineLength byte) error {
 		}
 	}
 
+	m.firstAddressFlag = false
 	m.extendedAddress = 0
 	for _, s := range m.dataSegments {
 		err := m.dumpDataSegment(writer, s, lineLength)
