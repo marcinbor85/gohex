@@ -562,3 +562,84 @@ func TestSetBinary(t *testing.T) {
 		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
 	}
 }
+
+func TestRemoveBinary(t *testing.T) {
+	m := NewMemory()
+
+	m.AddBinary(0x00, []byte{0, 1, 2, 3, 4, 5, 6, 7})
+	m.AddBinary(0x0A, []byte{0, 1, 2, 3})
+	m.AddBinary(0x10, []byte{8, 9, 10, 11})
+
+	m.RemoveBinary(0x02, 4)
+	m.RemoveBinary(0x0C, 6)
+
+	data := m.ToBinary(0, 20, 0xFF)
+	org := []byte{0, 1, 0xFF, 0xFF, 0xFF, 0xFF, 6, 7, 0xFF, 0xFF, 0, 1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 10, 11}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	if len(m.GetDataSegments()) != 4 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+
+	m.Clear()
+
+	m.AddBinary(0x00, []byte{0, 1, 2, 3, 4, 5, 6, 7})
+	m.AddBinary(0x0A, []byte{0, 1, 2, 3})
+	m.AddBinary(0x10, []byte{8, 9, 10, 11})
+
+	m.RemoveBinary(0x00, 4)
+	m.RemoveBinary(0x0A, 4)
+
+	data = m.ToBinary(0, 20, 0xFF)
+	org = []byte{0xFF, 0xFF, 0xFF, 0xFF, 4, 5, 6, 7, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 8, 9, 10, 11}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	if len(m.GetDataSegments()) != 2 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+
+	m.Clear()
+
+	m.AddBinary(0x00, []byte{0, 1})
+
+	m.RemoveBinary(0x00, 2)
+
+	data = m.ToBinary(0, 4, 0xFF)
+	org = []byte{0xFF, 0xFF, 0xFF, 0xFF}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	if len(m.GetDataSegments()) != 0 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+
+	m.Clear()
+
+	m.AddBinary(0x00, []byte{0, 1, 2, 3, 4, 5, 6, 7})
+	m.AddBinary(0x0A, []byte{0, 1, 2, 3})
+	m.AddBinary(0x10, []byte{8, 9, 10, 11})
+
+	m.RemoveBinary(0x0A, 4)
+
+	data = m.ToBinary(0, 20, 0xFF)
+	org = []byte{0, 1, 2, 3, 4, 5, 6, 7, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 8, 9, 10, 11}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	if len(m.GetDataSegments()) != 2 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+
+	m.AddBinary(0x0A, []byte{0, 1, 2, 3})
+
+	data = m.ToBinary(0, 20, 0xFF)
+	org = []byte{0, 1, 2, 3, 4, 5, 6, 7, 0xFF, 0xFF, 0, 1, 2, 3, 0xFF, 0xFF, 8, 9, 10, 11}
+	if reflect.DeepEqual(data, org) == false {
+		t.Errorf("incorrect binary data: %v", data)
+	}
+	if len(m.GetDataSegments()) != 3 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+}

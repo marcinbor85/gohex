@@ -30,13 +30,13 @@ func (segs sortByAddress) Less(i, j int) bool { return segs[i].Address < segs[j]
 
 // Main structure with private fields of IntelHex parser
 type Memory struct {
-	dataSegments    	[]*DataSegment 	// Slice with pointers to DataSegments
-	startAddress    	uint32         	// Start linear address
-	extendedAddress 	uint32         	// Extended linear address
-	eofFlag         	bool           	// End of file record exist flag
-	startFlag       	bool           	// Start address record exist flag
-	lineNum         	uint           	// Parser input line number
-	firstAddressFlag	bool			// Dump first address line
+	dataSegments     []*DataSegment // Slice with pointers to DataSegments
+	startAddress     uint32         // Start linear address
+	extendedAddress  uint32         // Extended linear address
+	eofFlag          bool           // End of file record exist flag
+	startFlag        bool           // Start address record exist flag
+	lineNum          uint           // Parser input line number
+	firstAddressFlag bool           // Dump first address line
 }
 
 // Constructor of Memory structure
@@ -88,13 +88,31 @@ func (seg *DataSegment) IsOverlap(adr uint32, size uint32) bool {
 	return false
 }
 
-func (m *Memory) findDataSegment(adr uint32) (seg *DataSegment, offset uint32) {
-	for _, s := range m.dataSegments {
-		if s.IsOverlap(adr, 1) == true {
-			return s, adr - s.Address
+func (m *Memory) removeSegment(index int) {
+	size := len(m.dataSegments)
+
+	if size == 0 {
+		return
+	} else if size == 1 {
+		m.dataSegments = []*DataSegment{}
+	} else {
+		if index == 0 {
+			m.dataSegments = m.dataSegments[1:]
+		} else if index == size-1 {
+			m.dataSegments = m.dataSegments[:index]
+		} else {
+			m.dataSegments = append(m.dataSegments[:index], m.dataSegments[index+1:]...)
 		}
 	}
-	return nil, 0
+}
+
+func (m *Memory) findDataSegment(adr uint32) (seg *DataSegment, offset uint32, index int) {
+	for i, s := range m.dataSegments {
+		if s.IsOverlap(adr, 1) == true {
+			return s, adr - s.Address, i
+		}
+	}
+	return nil, 0, 0
 }
 
 // Method to add binary data to memory (auto segmented and sorted)
@@ -133,10 +151,10 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 }
 
 // Method to set binary data to memory (data overlapped will change, auto segmented and sorted)
-func (m *Memory) SetBinary(adr uint32, bytes []byte) error {
+func (m *Memory) SetBinary(adr uint32, bytes []byte) {
 	for a, b := range bytes {
 		currentAdr := adr + uint32(a)
-		seg, offset := m.findDataSegment(currentAdr)
+		seg, offset, _ := m.findDataSegment(currentAdr)
 
 		if seg != nil {
 			seg.Data[offset] = b
@@ -144,7 +162,38 @@ func (m *Memory) SetBinary(adr uint32, bytes []byte) error {
 			m.AddBinary(currentAdr, []byte{b})
 		}
 	}
-	return nil
+}
+
+// Method to remove binary data from memory (auto segmented and sorted)
+func (m *Memory) RemoveBinary(adr uint32, size uint32) {
+	adrEnd := adr + size
+	for currentAdr := adr; currentAdr < adrEnd; currentAdr++ {
+		seg, offset, index := m.findDataSegment(currentAdr)
+
+		if seg == nil {
+			continue
+		}
+
+		if offset == 0 {
+			seg.Address += 1
+			if len(seg.Data) > 1 {
+				seg.Data = seg.Data[1:]
+			} else {
+				m.removeSegment(index)
+			}
+		} else if offset == uint32(len(seg.Data)-1) {
+			if len(seg.Data) > 1 {
+				seg.Data = seg.Data[:offset]
+			} else {
+				m.removeSegment(index)
+			}
+		} else {
+			newSeg := DataSegment{Address: seg.Address + offset + 1, Data: seg.Data[offset+1:]}
+			seg.Data = seg.Data[:offset]
+			m.dataSegments = append(m.dataSegments, &newSeg)
+		}
+	}
+	sort.Sort(sortByAddress(m.dataSegments))
 }
 
 func (m *Memory) parseIntelHexRecord(bytes []byte) error {
