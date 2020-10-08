@@ -52,7 +52,7 @@ func getExtendedAddress(bytes []byte) (adr uint32, err error) {
 	if binary.BigEndian.Uint16(bytes[1:3]) != 0 {
 		return 0, errors.New("incorrect address field in extended linear address line")
 	}
-	adr = uint32(binary.BigEndian.Uint16(bytes[4:6])) << 16
+	adr = uint32(binary.BigEndian.Uint16(bytes[4:6])) << (1 << bytes[3])
 	return adr, nil
 }
 
