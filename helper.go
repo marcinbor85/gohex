@@ -45,14 +45,14 @@ func checkEOF(bytes []byte) error {
 	return nil
 }
 
-func getExtendedAddress(bytes []byte) (adr uint32, err error) {
+func getExtendedAddress(bytes []byte, shift int) (adr uint32, err error) {
 	if bytes[0] != 2 {
 		return 0, errors.New("incorrect data length field in extended linear address line")
 	}
 	if binary.BigEndian.Uint16(bytes[1:3]) != 0 {
 		return 0, errors.New("incorrect address field in extended linear address line")
 	}
-	adr = uint32(binary.BigEndian.Uint16(bytes[4:6])) << 16
+	adr = uint32(binary.BigEndian.Uint16(bytes[4:6])) << shift
 	return adr, nil
 }
 

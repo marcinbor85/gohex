@@ -9,10 +9,11 @@ import (
 
 // Constants definitions of IntelHex record types
 const (
-	_DATA_RECORD    byte = 0 // Record with data bytes
-	_EOF_RECORD     byte = 1 // Record with end of file indicator
-	_ADDRESS_RECORD byte = 4 // Record with extended linear address
-	_START_RECORD   byte = 5 // Record with start linear address
+	_DATA_RECORD    		byte = 0 // Record with data bytes
+	_EOF_RECORD     		byte = 1 // Record with end of file indicator
+	_ADDRESS_RECORD_20BIT	byte = 2 // Record with extended linear address 20-bit
+	_ADDRESS_RECORD 		byte = 4 // Record with extended linear address 32-bit
+	_START_RECORD   		byte = 5 // Record with start linear address
 )
 
 // Structure with binary data segment fields
@@ -222,8 +223,14 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 			return newParseError(_RECORD_ERROR, err.Error(), m.lineNum)
 		}
 		m.eofFlag = true
+	case _ADDRESS_RECORD_20BIT:
+		fallthrough
 	case _ADDRESS_RECORD:
-		m.extendedAddress, err = getExtendedAddress(bytes)
+		shift := 16
+		if record_type == _ADDRESS_RECORD_20BIT {
+			shift = 4
+		}
+		m.extendedAddress, err = getExtendedAddress(bytes, shift)
 		if err != nil {
 			return newParseError(_RECORD_ERROR, err.Error(), m.lineNum)
 		}

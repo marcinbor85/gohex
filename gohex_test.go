@@ -369,6 +369,41 @@ func TestDataOverlaps(t *testing.T) {
 	}
 }
 
+func TestMultiSegmentsParse(t *testing.T) {
+	m := NewMemory()
+	
+	err := parseIntelHex(m,
+		":020000025000AC\n" +
+		":10000000A5A9AEFC5FAAB488B8A8860F8BC79C943C\n" +
+		":0200000260009C\n" +
+		":10000000F384980CA450DC26572ECE667CAF34DFE8\n" +
+		":0200000460009A\n" +
+		":10000000F384980CA450DC26572ECE667CAF34DEE9\n" +
+		":00000001FF\n");
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+
+	if len(m.GetDataSegments()) != 3 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+	seg := m.GetDataSegments()[0]
+	p := DataSegment{Address: 0x00050000, Data: []byte{0xA5, 0xA9, 0xAE, 0xFC, 0x5F, 0xAA, 0xB4, 0x88, 0xB8, 0xA8, 0x86, 0x0F, 0x8B, 0xC7, 0x9C, 0x94}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+	seg = m.GetDataSegments()[1]
+	p = DataSegment{Address: 0x00060000, Data: []byte{0xF3, 0x84, 0x98, 0x0C, 0xA4, 0x50, 0xDC, 0x26, 0x57, 0x2E, 0xCE, 0x66, 0x7C, 0xAF, 0x34, 0xDF}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+	seg = m.GetDataSegments()[2]
+	p = DataSegment{Address: 0x60000000, Data: []byte{0xF3, 0x84, 0x98, 0x0C, 0xA4, 0x50, 0xDC, 0x26, 0x57, 0x2E, 0xCE, 0x66, 0x7C, 0xAF, 0x34, 0xDE}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+}
+
 func TestSetStartMemory(t *testing.T) {
 	m := NewMemory()
 	m.SetStartAddress(0x12345678)
