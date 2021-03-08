@@ -402,6 +402,35 @@ func TestSetStartMemory(t *testing.T) {
 	}
 }
 
+func TestExtendedAddressIntelHex(t *testing.T) {
+
+	m := NewMemory()
+	oks := ":020000020000FC\n" +
+		":0C0000000102030405060708090A0B0CA6\n" +
+		":020000023000CC\n" +
+		":048000000102030472\n" +
+		":00000001FF\n"
+
+	err := parseIntelHex(m, oks)
+	if err != nil {
+		t.Error("unexpected error: ", err.Error())
+	}
+	if len(m.GetDataSegments()) != 2 {
+		t.Errorf("incorrect number of data segments: %v", len(m.GetDataSegments()))
+	}
+
+	seg := m.GetDataSegments()[0]
+	p := DataSegment{Address: 0x0000, Data: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+	seg = m.GetDataSegments()[1]
+	p = DataSegment{Address: 0x38000, Data: []byte{1, 2, 3, 4}}
+	if reflect.DeepEqual(seg, p) == false {
+		t.Errorf("incorrect segment: %v != %v", seg, p)
+	}
+}
+
 func TestDumpIntelHex(t *testing.T) {
 	m := NewMemory()
 	m.SetStartAddress(0x12345678)
