@@ -103,7 +103,7 @@ func writeStartAddressLine(writer io.Writer, startAdr uint32) error {
 func writeExtendedAddressLine(writer io.Writer, extAdr uint32) {
 	a := make([]byte, 2)
 	binary.BigEndian.PutUint16(a, uint16(extAdr>>16))
-	s := strings.ToUpper(hex.EncodeToString(makeDataLine(0, _ADDRESS_RECORD, a)))
+	s := strings.ToUpper(hex.EncodeToString(makeDataLine(0, _ADR_32_RECORD, a)))
 	fmt.Fprintf(writer, ":%s\n", s)
 }
 

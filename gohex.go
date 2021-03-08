@@ -11,8 +11,8 @@ import (
 const (
 	_DATA_RECORD     byte = 0 // Record with data bytes
 	_EOF_RECORD      byte = 1 // Record with end of file indicator
-	_EXTENDED_RECORD byte = 2
-	_ADDRESS_RECORD  byte = 4 // Record with extended linear address
+	_ADR_20_RECORD   byte = 2 // Record with extended 20-bit linear address
+	_ADR_32_RECORD   byte = 4 // Record with extended 32-bit linear address
 	_START_RECORD    byte = 5 // Record with start linear address
 )
 
@@ -223,10 +223,9 @@ func (m *Memory) parseIntelHexRecord(bytes []byte) error {
 			return newParseError(_RECORD_ERROR, err.Error(), m.lineNum)
 		}
 		m.eofFlag = true
-	case _EXTENDED_RECORD:
-		//Extended 8086 Segment Record
+	case _ADR_20_RECORD:
 		fallthrough
-	case _ADDRESS_RECORD:
+	case _ADR_32_RECORD:
 		m.extendedAddress, err = getExtendedAddress(bytes)
 		if err != nil {
 			return newParseError(_RECORD_ERROR, err.Error(), m.lineNum)
