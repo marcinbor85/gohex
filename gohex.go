@@ -9,11 +9,11 @@ import (
 
 // Constants definitions of IntelHex record types
 const (
-	_DATA_RECORD     byte = 0 // Record with data bytes
-	_EOF_RECORD      byte = 1 // Record with end of file indicator
-	_ADR_20_RECORD   byte = 2 // Record with extended 20-bit linear address
-	_ADR_32_RECORD   byte = 4 // Record with extended 32-bit linear address
-	_START_RECORD    byte = 5 // Record with start linear address
+	_DATA_RECORD   byte = 0 // Record with data bytes
+	_EOF_RECORD    byte = 1 // Record with end of file indicator
+	_ADR_20_RECORD byte = 2 // Record with extended 20-bit linear address
+	_ADR_32_RECORD byte = 4 // Record with extended 32-bit linear address
+	_START_RECORD  byte = 5 // Record with start linear address
 )
 
 // Structure with binary data segment fields
@@ -145,7 +145,9 @@ func (m *Memory) AddBinary(adr uint32, bytes []byte) error {
 		segAfter.Address = adr
 		segAfter.Data = append(bytes, segAfter.Data...)
 	} else {
-		m.dataSegments = append(m.dataSegments, &DataSegment{Address: adr, Data: bytes})
+		data := make([]byte, len(bytes))
+		copy(data, bytes)
+		m.dataSegments = append(m.dataSegments, &DataSegment{Address: adr, Data: data})
 	}
 	sort.Sort(sortByAddress(m.dataSegments))
 	return nil
